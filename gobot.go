@@ -84,9 +84,10 @@ func rollDice(c string) string {
 	if successes >= 1 {
 		return fmt.Sprintf("```%d Successes\nRolled %v```", successes, diceResults)
 	} else if successes == 0 {
+		return fmt.Sprintf("```\nFailed\nRolled %v```", diceResults)
+	} else {
 		return fmt.Sprintf("```\nBotched\nRolled %v```", diceResults)
 	}
-	return fmt.Sprintf("```\nFailed\nRolled %v```", diceResults)
 }
 
 func trimSlash(s string) string {
