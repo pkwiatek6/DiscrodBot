@@ -58,9 +58,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
+	if strings.Compare(strings.ToLower(m.Content), ("flip a coin")) == 0 {
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("```%s```", flipCoin()))
+		return
+	}
 	if strings.HasPrefix(m.Content, "/") {
 		diceResult = rollDice(trimSlash(m.Content))
 		s.ChannelMessageSend(m.ChannelID, diceResult)
+		return
 	}
 
 }
@@ -97,4 +102,11 @@ func trimSlash(s string) string {
 
 func rollD10() int {
 	return 1 + rand.Intn(9)
+}
+
+func flipCoin() string {
+	if rand.Intn(2) == 0 {
+		return "Heads"
+	}
+	return "Tails"
 }
