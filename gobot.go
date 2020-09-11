@@ -63,14 +63,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	if strings.HasPrefix(m.Content, "/") {
-		diceResult = rollDice(trimSlash(m.Content))
+		diceResult = rollDice(trimSlash(m.Content), m.Member.Nick)
 		s.ChannelMessageSend(m.ChannelID, diceResult)
 		return
 	}
 
 }
 
-func rollDice(c string) string {
+func rollDice(c string, name string) string {
 	toRoll := strings.Split(c, ",")
 	numDice, _ := strconv.Atoi(toRoll[0])
 	DC, _ := strconv.Atoi(toRoll[1])
@@ -87,11 +87,11 @@ func rollDice(c string) string {
 		}
 	}
 	if successes >= 1 {
-		return fmt.Sprintf("```%d Successes\nRolled %v```", successes, diceResults)
+		return fmt.Sprintf("```%s got %d Successes\nRolled %v```", name, successes, diceResults)
 	} else if successes == 0 {
-		return fmt.Sprintf("```\nFailed\nRolled %v```", diceResults)
+		return fmt.Sprintf("```%s Failed\nRolled %v```", name, diceResults)
 	} else {
-		return fmt.Sprintf("```\nBotched\nRolled %v```", diceResults)
+		return fmt.Sprintf("```%s got a Botch\nRolled %v```", name, diceResults)
 	}
 }
 
