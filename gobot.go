@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -54,7 +55,6 @@ func main() {
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
-	var diceResult string
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -63,15 +63,26 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	if strings.HasPrefix(m.Content, "/") {
-		diceResult = rollDice(trimSlash(m.Content), m.Member.Nick)
+		diceResult, err := rollDice(trimSlash(m.Content), m.Member.Nick)
+		if err != nil {
+			fmt.Printf("%s; offending Command %s\n", err, m.Content)
+			return
+		}
 		s.ChannelMessageSend(m.ChannelID, diceResult)
 		return
 	}
 
 }
 
-func rollDice(c string, name string) string {
+func rollDice(c string, name string) (string, error) {
+	var reason = ""
 	toRoll := strings.Split(c, ",")
+	if len(toRoll) < 2 {
+		return "", errors.New("Roll Dice: Not enough inputs for command")
+	}
+	if len(toRoll) == 3 {
+		reason = " trying to " + toRoll[2]
+	}
 	numDice, _ := strconv.Atoi(toRoll[0])
 	DC, _ := strconv.Atoi(toRoll[1])
 	var successes int
@@ -87,11 +98,11 @@ func rollDice(c string, name string) string {
 		}
 	}
 	if successes >= 1 {
-		return fmt.Sprintf("```%s got %d Successes\nRolled %v```", name, successes, diceResults)
+		return fmt.Sprintf("```%s got %d Successes%s\nRolled %v```", name, successes, reason, diceResults), nil
 	} else if successes == 0 {
-		return fmt.Sprintf("```%s Failed\nRolled %v```", name, diceResults)
+		return fmt.Sprintf("```%s Failed%s\nRolled %v```", name, reason, diceResults), nil
 	} else {
-		return fmt.Sprintf("```%s got a Botch\nRolled %v```", name, diceResults)
+		return fmt.Sprintf("```%s got a Botch%s\nRolled %v```", name, reason, diceResults), nil
 	}
 }
 
