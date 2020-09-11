@@ -83,8 +83,14 @@ func rollDice(c string, name string) (string, error) {
 	if len(toRoll) == 3 {
 		reason = " trying to " + toRoll[2]
 	}
-	numDice, _ := strconv.Atoi(toRoll[0])
-	DC, _ := strconv.Atoi(toRoll[1])
+	numDice, err := strconv.Atoi(toRoll[0])
+	if err != nil {
+		return "", errors.New("Roll Dice: numDice was not a number")
+	}
+	DC, err := strconv.Atoi(toRoll[1])
+	if err != nil {
+		return "", errors.New("Roll Dice: DC was not a number")
+	}
 	var successes int
 	diceResults := make([]int, numDice)
 	for i := 0; i < numDice; i++ {
