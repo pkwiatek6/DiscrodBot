@@ -72,12 +72,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 		if matched {
-			diceResult, err := rollDice(cmdGiven, m.Member.Nick)
+			err := rollDice(cmdGiven, m.Member.Nick, m.ChannelID, s)
 			if err != nil {
 				fmt.Printf("%s; offending Command %s\n", err, m.Content)
 				return
 			}
-			s.ChannelMessageSend(m.ChannelID, diceResult)
 		}
 
 		return
@@ -85,22 +84,22 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 }
 
-func rollDice(c string, name string) (string, error) {
+func rollDice(c string, name string, channel string, session *discordgo.Session) error {
 	var reason = ""
 	toRoll := strings.Split(c, ",")
 	if len(toRoll) < 2 {
-		return "", errors.New("Roll Dice: Not enough inputs for command")
+		return errors.New("Roll Dice: Not enough inputs for command")
 	}
 	if len(toRoll) == 3 {
 		reason = " trying to " + toRoll[2]
 	}
 	numDice, err := strconv.Atoi(toRoll[0])
 	if err != nil {
-		return "", errors.New("Roll Dice: numDice was not a number")
+		return errors.New("Roll Dice: numDice was not a number")
 	}
 	DC, err := strconv.Atoi(toRoll[1])
 	if err != nil {
-		return "", errors.New("Roll Dice: DC was not a number")
+		return errors.New("Roll Dice: DC was not a number")
 	}
 	var successes int
 	diceResults := make([]int, numDice)
@@ -115,12 +114,17 @@ func rollDice(c string, name string) (string, error) {
 		}
 	}
 	if successes >= 1 {
-		return fmt.Sprintf("```%s got %d Successes%s\nRolled %v```", name, successes, reason, diceResults), nil
+		toPost := fmt.Sprintf("```%s got %d Successes%s\nRolled %v```", name, successes, reason, diceResults)
+		session.ChannelMessageSend(channel, toPost)
+
 	} else if successes == 0 {
-		return fmt.Sprintf("```%s Failed%s\nRolled %v```", name, reason, diceResults), nil
+		toPost := fmt.Sprintf("```%s Failed%s\nRolled %v```", name, reason, diceResults)
+		session.ChannelMessageSend(channel, toPost)
 	} else {
-		return fmt.Sprintf("```%s got a Botch%s\nRolled %v```", name, reason, diceResults), nil
+		toPost := fmt.Sprintf("```%s got a Botch%s\nRolled %v```", name, reason, diceResults)
+		session.ChannelMessageSend(channel, toPost)
 	}
+	return nil
 }
 
 func trimSlash(s string) string {
