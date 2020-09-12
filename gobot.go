@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -17,9 +18,17 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type rollHistory struct {
+	rolls  []int
+	dc     int
+	reason string
+}
+
 var (
 	// Token for the bot
 	Token string
+	// LastRolls keeps track of the last player roll
+	LastRolls map[string]rollHistory
 )
 
 func init() {
@@ -27,6 +36,7 @@ func init() {
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
+	LastRolls = make(map[string]rollHistory)
 }
 
 func main() {
@@ -59,10 +69,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
-	if strings.Compare(strings.ToLower(m.Content), ("flip a coin")) == 0 {
+	if strings.Compare(strings.ToLower(m.Content), "flip a coin") == 0 {
 		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("```%s flipped a coin and it came up %s```", m.Member.Nick, flipCoin()))
 		return
 	}
+	//Deals with commands, consumes the prefix(default /)
 	if strings.HasPrefix(m.Content, "/") {
 		cmdGiven := trimSlash(m.Content)
 		//The Regex checks if you are rolling dice, I'm not using \s becuase it was giving me an error for some reason
@@ -73,6 +84,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		if matched {
 			err := rollDice(cmdGiven, m.Member.Nick, m.ChannelID, s)
+			if err != nil {
+				fmt.Printf("%s; offending Command %s\n", err, m.Content)
+				return
+			}
+		}
+		if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 {
+			err := rerollDice(m.Member.Nick, m.ChannelID, s)
 			if err != nil {
 				fmt.Printf("%s; offending Command %s\n", err, m.Content)
 				return
@@ -101,18 +119,13 @@ func rollDice(c string, name string, channel string, session *discordgo.Session)
 	if err != nil {
 		return errors.New("Roll Dice: DC was not a number")
 	}
-	var successes int
+	//makes an integer array the size of the number of dice rolled and populates it
 	diceResults := make([]int, numDice)
 	for i := 0; i < numDice; i++ {
 		diceResults[i] = rollD10()
-		if diceResults[i] == 10 {
-			successes += 2
-		} else if diceResults[i] >= DC && diceResults[i] != 10 {
-			successes++
-		} else if diceResults[i] == 1 && diceResults[i] < DC {
-			successes--
-		}
 	}
+	successes := countSuc(diceResults, DC)
+	LastRolls[name] = rollHistory{diceResults, DC, reason}
 	if successes >= 1 {
 		toPost := fmt.Sprintf("```%s got %d Successes%s\nRolled %v```", name, successes, reason, diceResults)
 		session.ChannelMessageSend(channel, toPost)
@@ -122,6 +135,35 @@ func rollDice(c string, name string, channel string, session *discordgo.Session)
 		session.ChannelMessageSend(channel, toPost)
 	} else {
 		toPost := fmt.Sprintf("```%s got a Botch%s\nRolled %v```", name, reason, diceResults)
+		session.ChannelMessageSend(channel, toPost)
+	}
+	return nil
+}
+
+func rerollDice(name string, channel string, session *discordgo.Session) error {
+	var oldResults = LastRolls[name].rolls
+	sort.Ints(oldResults)
+	var tempDC = LastRolls[name].dc
+	var failedRolls [3]int
+	var newRolls [3]int
+	for i := 0; i < 3; i++ {
+		if oldResults[i] < tempDC && oldResults[i] != 10 {
+			failedRolls[i] = oldResults[i]
+			newRolls[i] = rollD10()
+			oldResults[i] = newRolls[i]
+		}
+	}
+	successes := countSuc(oldResults, tempDC)
+	LastRolls[name] = rollHistory{oldResults, tempDC, LastRolls[name].reason}
+	if successes >= 1 {
+		toPost := fmt.Sprintf("```%s got %d Successes%s\nRolled %v\nRerolls %v -> %v```", name, successes, LastRolls[name].reason, oldResults, failedRolls, newRolls)
+		session.ChannelMessageSend(channel, toPost)
+
+	} else if successes == 0 {
+		toPost := fmt.Sprintf("```%s Failed%s\nRolled %v\nRerolls %v -> %v```", name, LastRolls[name].reason, oldResults, failedRolls, newRolls)
+		session.ChannelMessageSend(channel, toPost)
+	} else {
+		toPost := fmt.Sprintf("```%s got a Botch%s\nRolled %v\nRerolls %v -> %v```", name, LastRolls[name].reason, oldResults, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 	}
 	return nil
@@ -141,4 +183,17 @@ func flipCoin() string {
 		return "Heads"
 	}
 	return "Tails"
+}
+func countSuc(diceResults []int, DC int) int {
+	var successes = 0
+	for i := 0; i < len(diceResults); i++ {
+		if diceResults[i] == 10 {
+			successes += 2
+		} else if diceResults[i] >= DC && diceResults[i] != 10 {
+			successes++
+		} else if diceResults[i] == 1 && diceResults[i] < DC {
+			successes--
+		}
+	}
+	return successes
 }
