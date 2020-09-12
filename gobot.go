@@ -89,7 +89,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 		}
-		if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 {
+		if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
 			err := rerollDice(m.Member.Nick, m.ChannelID, s)
 			if err != nil {
 				fmt.Printf("%s; offending Command %s\n", err, m.Content)
@@ -146,7 +146,11 @@ func rerollDice(name string, channel string, session *discordgo.Session) error {
 	var tempDC = LastRolls[name].dc
 	var failedRolls [3]int
 	var newRolls [3]int
-	for i := 0; i < 3; i++ {
+	var max = 3
+	if len(oldResults) < 3 {
+		max = len(oldResults)
+	}
+	for i := 0; i < max; i++ {
 		if oldResults[i] < tempDC && oldResults[i] != 10 {
 			failedRolls[i] = oldResults[i]
 			newRolls[i] = rollD10()
@@ -156,14 +160,14 @@ func rerollDice(name string, channel string, session *discordgo.Session) error {
 	successes := countSuc(oldResults, tempDC)
 	LastRolls[name] = rollHistory{oldResults, tempDC, LastRolls[name].reason}
 	if successes >= 1 {
-		toPost := fmt.Sprintf("```%s got %d Successes%s\nRolled %v\nRerolls %v -> %v```", name, successes, LastRolls[name].reason, oldResults, failedRolls, newRolls)
+		toPost := fmt.Sprintf("```%s got %d Successes%s\nRerolls %v -> %v```", name, successes, LastRolls[name].reason, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 
 	} else if successes == 0 {
-		toPost := fmt.Sprintf("```%s Failed%s\nRolled %v\nRerolls %v -> %v```", name, LastRolls[name].reason, oldResults, failedRolls, newRolls)
+		toPost := fmt.Sprintf("```%s Failed%s\nRerolls %v -> %v```", name, LastRolls[name].reason, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 	} else {
-		toPost := fmt.Sprintf("```%s got a Botch%s\nRolled %v\nRerolls %v -> %v```", name, LastRolls[name].reason, oldResults, failedRolls, newRolls)
+		toPost := fmt.Sprintf("```%s got a Botch%s\nRerolls %v -> %v```", name, LastRolls[name].reason, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 	}
 	return nil
