@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
@@ -59,16 +60,26 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	if strings.Compare(strings.ToLower(m.Content), ("flip a coin")) == 0 {
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("```%s```", flipCoin()))
+		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("```%s flipped a coin and it came up %s```", m.Member.Nick, flipCoin()))
 		return
 	}
 	if strings.HasPrefix(m.Content, "/") {
-		diceResult, err := rollDice(trimSlash(m.Content), m.Member.Nick)
+		cmdGiven := trimSlash(m.Content)
+		//The Regex checks if you are rolling dice, I'm not using \s becuase it was giving me an error for some reason
+		matched, err := regexp.MatchString("^[0-9]+,[0-9]+,?[a-zA-z\r\n\t\f\v]*", cmdGiven)
 		if err != nil {
 			fmt.Printf("%s; offending Command %s\n", err, m.Content)
 			return
 		}
-		s.ChannelMessageSend(m.ChannelID, diceResult)
+		if matched {
+			diceResult, err := rollDice(cmdGiven, m.Member.Nick)
+			if err != nil {
+				fmt.Printf("%s; offending Command %s\n", err, m.Content)
+				return
+			}
+			s.ChannelMessageSend(m.ChannelID, diceResult)
+		}
+
 		return
 	}
 
