@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -42,7 +43,7 @@ func init() {
 func main() {
 	discord, err := discordgo.New("Bot " + Token)
 	if err != nil {
-		fmt.Println("error creating Discord session,", err)
+		log.Println("error creating Discord session,", err)
 		return
 	}
 
@@ -52,7 +53,7 @@ func main() {
 
 	err = discord.Open()
 	if err != nil {
-		fmt.Println("error opening connection,", err)
+		log.Println("error opening connection,", err)
 		return
 	}
 
@@ -66,11 +67,12 @@ func main() {
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
+	//bot should never read it's own output
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
 	if strings.Compare(strings.ToLower(m.Content), "flip a coin") == 0 {
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("```%s flipped a coin and it came up %s```", m.Member.Nick, flipCoin()))
+		go flipCoin(m.ChannelID, m.Member.Nick, s)
 		return
 	}
 	//Deals with commands, consumes the prefix(default /)
@@ -79,45 +81,37 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		//The Regex checks if you are rolling dice, I'm not using \s becuase it was giving me an error for some reason
 		matched, err := regexp.MatchString("^[0-9]+,[0-9]+,?[a-zA-z\r\n\t\f\v]*", cmdGiven)
 		if err != nil {
-			fmt.Printf("%s; offending Command %s\n", err, m.Content)
+			log.Printf("%s; offending Command %s\n", err, m.Content)
 			return
 		}
 		if matched {
-			err := rollDice(cmdGiven, m.Member.Nick, m.ChannelID, s)
-			if err != nil {
-				fmt.Printf("%s; offending Command %s\n", err, m.Content)
-				return
-			}
+			go rollDice(cmdGiven, m.Member.Nick, m.ChannelID, s)
+		} else if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
+			go rerollDice(m.Member.Nick, m.ChannelID, s)
 		}
-		if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
-			err := rerollDice(m.Member.Nick, m.ChannelID, s)
-			if err != nil {
-				fmt.Printf("%s; offending Command %s\n", err, m.Content)
-				return
-			}
-		}
-
-		return
 	}
 
 }
 
-func rollDice(c string, name string, channel string, session *discordgo.Session) error {
-	var reason = ""
+func rollDice(c string, name string, channel string, session *discordgo.Session) {
+	var reason string
 	toRoll := strings.Split(c, ",")
 	if len(toRoll) < 2 {
-		return errors.New("Roll Dice: Not enough inputs for command")
+		log.Println(errors.New("Roll Dice: Not enough inputs for command"))
+		return
 	}
 	if len(toRoll) == 3 {
 		reason = " trying to " + toRoll[2]
 	}
 	numDice, err := strconv.Atoi(toRoll[0])
 	if err != nil {
-		return errors.New("Roll Dice: numDice was not a number")
+		log.Println(errors.New("Roll Dice: numDice was not a number"))
+		return
 	}
 	DC, err := strconv.Atoi(toRoll[1])
 	if err != nil {
-		return errors.New("Roll Dice: DC was not a number")
+		log.Println(errors.New("Roll Dice: DC was not a number"))
+		return
 	}
 	//makes an integer array the size of the number of dice rolled and populates it
 	diceResults := make([]int, numDice)
@@ -129,7 +123,6 @@ func rollDice(c string, name string, channel string, session *discordgo.Session)
 	if successes >= 1 {
 		toPost := fmt.Sprintf("```%s got %d Successes%s\nRolled %v```", name, successes, reason, diceResults)
 		session.ChannelMessageSend(channel, toPost)
-
 	} else if successes == 0 {
 		toPost := fmt.Sprintf("```%s Failed%s\nRolled %v```", name, reason, diceResults)
 		session.ChannelMessageSend(channel, toPost)
@@ -137,10 +130,9 @@ func rollDice(c string, name string, channel string, session *discordgo.Session)
 		toPost := fmt.Sprintf("```%s got a Botch%s\nRolled %v```", name, reason, diceResults)
 		session.ChannelMessageSend(channel, toPost)
 	}
-	return nil
 }
 
-func rerollDice(name string, channel string, session *discordgo.Session) error {
+func rerollDice(name string, channel string, session *discordgo.Session) {
 	var oldResults = LastRolls[name].rolls
 	sort.Ints(oldResults)
 	var tempDC = LastRolls[name].dc
@@ -170,7 +162,6 @@ func rerollDice(name string, channel string, session *discordgo.Session) error {
 		toPost := fmt.Sprintf("```%s got a Botch%s\nRerolls %v -> %v```", name, LastRolls[name].reason, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 	}
-	return nil
 }
 
 func trimSlash(s string) string {
@@ -182,11 +173,11 @@ func rollD10() int {
 	return 1 + rand.Intn(9)
 }
 
-func flipCoin() string {
+func flipCoin(channel string, nick string, session *discordgo.Session) {
 	if rand.Intn(2) == 0 {
-		return "Heads"
+		session.ChannelMessageSend(channel, fmt.Sprintf("```%s flipped a coin and it came up %s```", nick, "Heads"))
 	}
-	return "Tails"
+	session.ChannelMessageSend(channel, fmt.Sprintf("```%s flipped a coin and it came up %s```", nick, "Tails"))
 }
 func countSuc(diceResults []int, DC int) int {
 	var successes = 0
