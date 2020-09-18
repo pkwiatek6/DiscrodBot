@@ -176,8 +176,10 @@ func rollD10() int {
 func flipCoin(channel string, nick string, session *discordgo.Session) {
 	if rand.Intn(2) == 0 {
 		session.ChannelMessageSend(channel, fmt.Sprintf("```%s flipped a coin and it came up %s```", nick, "Heads"))
+		return
 	}
 	session.ChannelMessageSend(channel, fmt.Sprintf("```%s flipped a coin and it came up %s```", nick, "Tails"))
+	return
 }
 func countSuc(diceResults []int, DC int) int {
 	var successes = 0
