@@ -17,19 +17,21 @@ import (
 	"unicode/utf8"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/pkwiatek6/DiscrodBot/data"
 )
 
+/*
 type rollHistory struct {
 	rolls  []int
 	dc     int
 	reason string
 }
-
+*/
 var (
 	// Token for the bot
 	Token string
 	// LastRolls keeps track of the last player roll
-	LastRolls map[string]rollHistory
+	LastRolls map[string]data.RollHistory
 )
 
 func init() {
@@ -37,7 +39,7 @@ func init() {
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
-	LastRolls = make(map[string]rollHistory)
+	LastRolls = make(map[string]data.RollHistory)
 }
 
 func main() {
@@ -92,8 +94,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 }
-
-func rollDice(c string, name string, channel string, session *discordgo.Session) {
+func rollDice(c string, nick string, channel string, session *discordgo.Session) {
 	var reason string
 	toRoll := strings.Split(c, ",")
 	if len(toRoll) < 2 {
@@ -119,23 +120,24 @@ func rollDice(c string, name string, channel string, session *discordgo.Session)
 		diceResults[i] = rollD10()
 	}
 	successes := countSuc(diceResults, DC)
-	LastRolls[name] = rollHistory{diceResults, DC, reason}
+	//TODO: recode to user unique identifer instead of nickname so rolls aren;t lost
+	LastRolls[nick] = data.RollHistory{Rolls: diceResults, DC: DC, Reason: reason}
 	if successes >= 1 {
-		toPost := fmt.Sprintf("```%s got %d Successes%s\nRolled %v```", name, successes, reason, diceResults)
+		toPost := fmt.Sprintf("```%s got %d Successes%s\nRolled %v```", nick, successes, reason, diceResults)
 		session.ChannelMessageSend(channel, toPost)
 	} else if successes == 0 {
-		toPost := fmt.Sprintf("```%s Failed%s\nRolled %v```", name, reason, diceResults)
+		toPost := fmt.Sprintf("```%s Failed%s\nRolled %v```", nick, reason, diceResults)
 		session.ChannelMessageSend(channel, toPost)
 	} else {
-		toPost := fmt.Sprintf("```%s got a Botch%s\nRolled %v```", name, reason, diceResults)
+		toPost := fmt.Sprintf("```%s got a Botch%s\nRolled %v```", nick, reason, diceResults)
 		session.ChannelMessageSend(channel, toPost)
 	}
 }
 
 func rerollDice(name string, channel string, session *discordgo.Session) {
-	var oldResults = LastRolls[name].rolls
+	var oldResults = LastRolls[name].Rolls
 	sort.Ints(oldResults)
-	var tempDC = LastRolls[name].dc
+	var tempDC = LastRolls[name].DC
 	var failedRolls [3]int
 	var newRolls [3]int
 	var max = 3
@@ -150,16 +152,16 @@ func rerollDice(name string, channel string, session *discordgo.Session) {
 		}
 	}
 	successes := countSuc(oldResults, tempDC)
-	LastRolls[name] = rollHistory{oldResults, tempDC, LastRolls[name].reason}
+	LastRolls[name] = data.RollHistory{Rolls: oldResults, DC: tempDC, Reason: LastRolls[name].Reason}
 	if successes >= 1 {
-		toPost := fmt.Sprintf("```%s got %d Successes%s\nRerolls %v -> %v```", name, successes, LastRolls[name].reason, failedRolls, newRolls)
+		toPost := fmt.Sprintf("```%s got %d Successes%s\nRerolls %v -> %v```", name, successes, LastRolls[name].Reason, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 
 	} else if successes == 0 {
-		toPost := fmt.Sprintf("```%s Failed%s\nRerolls %v -> %v```", name, LastRolls[name].reason, failedRolls, newRolls)
+		toPost := fmt.Sprintf("```%s Failed%s\nRerolls %v -> %v```", name, LastRolls[name].Reason, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 	} else {
-		toPost := fmt.Sprintf("```%s got a Botch%s\nRerolls %v -> %v```", name, LastRolls[name].reason, failedRolls, newRolls)
+		toPost := fmt.Sprintf("```%s got a Botch%s\nRerolls %v -> %v```", name, LastRolls[name].Reason, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 	}
 }
