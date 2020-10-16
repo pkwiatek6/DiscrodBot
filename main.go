@@ -69,6 +69,8 @@ func main() {
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
+	var cmdGiven;
+
 	//bot should never read it's own output
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -78,10 +80,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	//Deals with commands, consumes the prefix(default / or !)
-	cmdGiven := trimSlash(m.Content)
-	IsCommand, err := regexp.MatchString("[/!].*", cmdGiven)
+	IsCommand, err := regexp.MatchString("[/!].*", m.Content)
 	if err != nil {
 		log.Printf("%s; offending Command %s\n", err, m.Content)
+	} else {
+		cmdGiven = trimSlash(m.Content)
 	}
 	if IsCommand {
 		//The Regex checks if you are rolling dice, I'm not using \s becuase it was giving me an error for some reason
