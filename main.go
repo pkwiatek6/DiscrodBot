@@ -77,9 +77,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		go flipCoin(m.ChannelID, m.Member.Nick, s)
 		return
 	}
-	//Deals with commands, consumes the prefix(default /)
-	if strings.HasPrefix(m.Content, "/") {
-		cmdGiven := trimSlash(m.Content)
+	//Deals with commands, consumes the prefix(default / or !)
+	cmdGiven := trimSlash(m.Content)
+	IsCommand, err := regexp.MatchString("[/!].*", cmdGiven)
+	if err != nil {
+		log.Printf("%s; offending Command %s\n", err, m.Content)
+	}
+	if IsCommand {
 		//The Regex checks if you are rolling dice, I'm not using \s becuase it was giving me an error for some reason
 		matched, err := regexp.MatchString("^[0-9]+,[0-9]+,?[a-zA-z\r\n\t\f\v]*", cmdGiven)
 		if err != nil {
@@ -90,6 +94,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			go rollDice(cmdGiven, m.Member.Nick, m.ChannelID, s)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
 			go rerollDice(m.Member.Nick, m.ChannelID, s)
+		} else if strings.Compare(strings.ToLower(cmdGiven), "schedule") == 0 {
+
 		}
 	}
 
