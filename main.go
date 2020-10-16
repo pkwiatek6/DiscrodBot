@@ -75,7 +75,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if err != nil {
 		log.Printf("%s; offending Command %s\n", err, m.Content)
 	} else {
-		cmdGiven = trimSlash(m.Content)
+		cmdGiven = trimPrefix(m.Content)
 	}
 	if IsCommand {
 		//The Regex checks if you are rolling dice, I'm not using \s becuase it was giving me an error for some reason
@@ -95,7 +95,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 }
 
-func trimSlash(s string) string {
+//trims the prefix
+func trimPrefix(s string) string {
 	_, i := utf8.DecodeRuneInString(s)
 	return s[i:]
 }
