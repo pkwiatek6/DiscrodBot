@@ -83,11 +83,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	IsCommand, err := regexp.MatchString("[/!].*", m.Content)
 	if err != nil {
 		log.Printf("%s; offending Command %s\n", err, m.Content)
-	} else {
-		cmdGiven = trimSlash(m.Content)
 	}
 	if IsCommand {
 		//The Regex checks if you are rolling dice, I'm not using \s becuase it was giving me an error for some reason
+		cmdGiven = trimSlash(m.Content)
 		matched, err := regexp.MatchString("^[0-9]+,[0-9]+,?[a-zA-z\r\n\t\f\v]*", cmdGiven)
 		if err != nil {
 			log.Printf("%s; offending Command %s\n", err, m.Content)
