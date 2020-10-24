@@ -3,9 +3,9 @@ package data
 //RollHistory cotains the data fo player rolls
 type RollHistory struct {
 	//Rolls holds the last roll made by the character
-	Rolls []int
+	Rolls []int `json:"rolls"`
 	//DC holds the last DC for the last roll
-	DC int
+	DC int `json:"dc"`
 	//Reason holds the last reason for the last roll
-	Reason string
+	Reason string `json:"reason"`
 }

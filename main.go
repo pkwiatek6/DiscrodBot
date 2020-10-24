@@ -89,7 +89,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
 			go actions.RerollDice(m.Member.Nick, m.ChannelID, s, &LastRolls)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "schedule") == 0 {
-
+			//TODO make sceduling command for next session
 		}
 	}
 

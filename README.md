@@ -10,4 +10,6 @@ To run the bot use `./DiscrodBot -t BOT_TOKEN`
 /N,DC - N is number of dice to roll, DC is DC of the check
 * Rolls N dice, does proper math vs DC to get number of sucesses
 
+/N,DC,Reason - simmilar to rolling dice but outputs the reason for the roll as well
+
 Flip a coin - flips a coin

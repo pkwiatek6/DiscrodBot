@@ -116,3 +116,8 @@ func RollDice(c string, nick string, channel string, session *discordgo.Session,
 		session.ChannelMessageSend(channel, toPost)
 	}
 }
+
+//ScheduleSession saves reminders for next sessions, will ping everyone, should only be accessible to StoryTeller
+func ScheduleSession() {
+
+}
