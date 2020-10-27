@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -13,6 +14,8 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"go.mongodb.org/mongo-driver/mongo"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/pkwiatek6/DiscrodBot/actions"
 	"github.com/pkwiatek6/DiscrodBot/data"
@@ -23,6 +26,8 @@ var (
 	Token string
 	// LastRolls keeps track of the last player roll
 	LastRolls map[string]data.RollHistory
+	//Client is the cpnnection to the database
+	Client *mongo.Client
 )
 
 func init() {
@@ -34,12 +39,17 @@ func init() {
 }
 
 func main() {
+	//opens connection the the database to load in relevant data, also closes it when program finishes running
+	Client = actions.ConnectDB()
+	//defer still exists to close connections when program returns, though only when it error's out
+	defer Client.Disconnect(context.Background())
+
 	discord, err := discordgo.New("Bot " + Token)
 	if err != nil {
 		log.Println("error creating Discord session,", err)
 		return
 	}
-
+	//can add more handlers based on the discord api, the function passed must always accept a Session and a discord event
 	discord.AddHandler(messageCreate)
 
 	discord.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages)
@@ -53,9 +63,15 @@ func main() {
 	fmt.Println("Bot is now running. Press CRTL-C to exit")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
-
-	discord.Close()
+	go func() {
+		<-sc
+		//closes conentions upon reciviing an interupt
+		fmt.Println("\r- Interrupt recived, Closing Bot")
+		Client.Disconnect(context.Background())
+		discord.Close()
+	}()
+	//if something breaks when closing it's the defer
+	defer discord.Close()
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -78,12 +94,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		cmdGiven = trimPrefix(m.Content)
 	}
 	if IsCommand {
-		//The Regex checks if you are rolling dice, I'm not using \s becuase it was giving me an error for some reason
+		//The Regex checks if you are rolling dice, I'm not using \s becuase it was giving me an error saying it's not a vaild escape sequence
 		matched, err := regexp.MatchString("^[0-9]+,[0-9]+,?[a-zA-z\r\n\t\f\v]*", cmdGiven)
 		if err != nil {
 			log.Printf("%s; offending Command %s\n", err, m.Content)
 			return
 		}
+		//checks what the other commands are, this should probably be made into a router
 		if matched {
 			go actions.RollDice(cmdGiven, m.Member.Nick, m.ChannelID, s, &LastRolls)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {

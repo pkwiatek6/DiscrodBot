@@ -1,46 +1,55 @@
 package actions
 
 import (
-	"database/sql"
+	"context"
 	"log"
 
 	"github.com/pkwiatek6/DiscrodBot/data"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	dbHost = "tcp(127.0.0.1:3307)"
-	dbName = "character_list"
-	dbUser = "user"
-	dbPass = ""
-
-//	MAX_ROWS_PER_THREAD = 100000
-//	NUMBER_OF_THREADS   = 10000
-)
-
-//SaveCharacter saves player data to a database
-func SaveCharacter(character data.Character) error {
-	//open db
-	//obtain read write lock, ie only it can read and write to the database
-	//save to db
-	//release locks
-	//close db
-	//mySQL works better here than noSQL becuase I'm saving and reading structured data
+//SaveCharacter saves player data to a noSQL db
+func SaveCharacter(character data.Character, client *mongo.Client) error {
+	collection := client.Database("my_database").Collection("Characters")
+	insertResult, err := collection.InsertOne(context.TODO(), character)
+	if err != nil {
+		return err
+	}
+	log.Println("Inserted post with ID:", insertResult.InsertedID)
 	return nil
 }
 
 //LoadCharacter loads a given character
-func LoadCharacter(name string) (data.Character, error) {
-	//open db
-	database, err := sql.Open("mysql", dbUser+":"+dbPass+"@"+dbHost+"/"+dbName+"?charset=utf8")
+func LoadCharacter(name string, client *mongo.Client) (data.Character, error) {
+	collection := client.Database("my_database").Collection("Characters")
+	filter := bson.D{}
+	var character data.Character
+	err := collection.FindOne(nil, filter).Decode(&character)
 	if err != nil {
-		log.Println(err)
-		return data.Character{}, err
+		return character, err
 	}
-	//obtain write locl?, only it can write everyone can read
-	//read from db
-	//save to variable
-	//close db
-	//return variable
-	//mySQL works better here than noSQL becuase I'm saving and reading structured data
-	return data.Character{}, nil
+	return character, nil
+}
+
+//ConnectDB makes a client that can be called again and again to reference the database, call this first to create a Client
+func ConnectDB() *mongo.Client {
+	// Set client options
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	return client
 }
