@@ -2,21 +2,24 @@ package data
 
 //Character contains all the data a charcter needs
 type Character struct {
-	Name         string     `bson:"name" json:"name"`
-	Natrue       string     `bson:"natrue" json:"natrue"`
-	Clan         string     `bson:"clan" json:"clan"`
-	Demeanor     string     `bson:"demeanor" json:"demeanor"`
-	Attributes   attributes `bson:"attributes" json:"attributes"`
-	Abilities    abilities  `bson:"abilities" json:"abilities"`
-	Advantages   advantages `bson:"advantages" json:"advantages"`
-	Merits       []string   `bson:"merits" json:"merits"`
-	Flaw         []string   `bson:"flaw" json:"flaw"`
-	Path         uint8      `bson:"path" json:"path"`
-	PermWill     uint8      `bson:"permwill" json:"permwill"`
-	Willpower    uint8      `bson:"willpower" json:"willpower"`
-	MaxBloodpool uint8      `bson:"maxbloodpool" json:"maxbloodpool"`
-	Bloodpool    uint8      `bson:"bloodpool" json:"bloodpool"`
-	Health       uint8      `bson:"health" json:"health"`
+	//will be readded later, discordgo doesn't return username or discriminators
+	//User         string      `bson:"user" json:"user"`
+	Name         string      `bson:"name" json:"name"`
+	Natrue       string      `bson:"natrue" json:"natrue"`
+	Clan         string      `bson:"clan" json:"clan"`
+	Demeanor     string      `bson:"demeanor" json:"demeanor"`
+	Attributes   attributes  `bson:"attributes" json:"attributes"`
+	Abilities    abilities   `bson:"abilities" json:"abilities"`
+	Advantages   advantages  `bson:"advantages" json:"advantages"`
+	Merits       []string    `bson:"merits" json:"merits"`
+	Flaw         []string    `bson:"flaw" json:"flaw"`
+	Path         uint8       `bson:"path" json:"path"`
+	PermWill     uint8       `bson:"permwill" json:"permwill"`
+	Willpower    uint8       `bson:"willpower" json:"willpower"`
+	MaxBloodpool uint8       `bson:"maxbloodpool" json:"maxbloodpool"`
+	Bloodpool    uint8       `bson:"bloodpool" json:"bloodpool"`
+	Health       uint8       `bson:"health" json:"health"`
+	LastRoll     RollHistory `bson:"lastroll" json:"lastroll"`
 }
 
 type attributes struct {
@@ -35,13 +38,13 @@ type attributes struct {
 }
 
 type abilities struct {
-	Talents   map[string]uint8 `bson:"Talents" json:"Talents"`
-	Skills    map[string]uint8 `bson:"Skills" json:"Skills"`
-	Knowledge map[string]uint8 `bson:"Knowledge" json:"Knowledge"`
+	Talents   map[string]uint8 `bson:"talents" json:"talents"`
+	Skills    map[string]uint8 `bson:"skills" json:"skills"`
+	Knowledge map[string]uint8 `bson:"knowledge" json:"knowledge"`
 }
 
 type advantages struct {
-	Disciplines map[string]uint8 `bson:"Disciplines" json:"Disciplines"`
-	Backgrounds map[string]uint8 `bson:"Backgrounds" json:"Backgrounds"`
-	Virtues     map[string]uint8 `bson:"Virtues" json:"Virtues"`
+	Disciplines map[string]uint8 `bson:"disciplines" json:"disciplines"`
+	Backgrounds map[string]uint8 `bson:"backgrounds" json:"backgrounds"`
+	Virtues     map[string]uint8 `bson:"virtues" json:"virtues"`
 }

@@ -41,8 +41,6 @@ func init() {
 func main() {
 	//opens connection the the database to load in relevant data, also closes it when program finishes running
 	Client = actions.ConnectDB()
-	//defer still exists to close connections when program returns, though only when it error's out
-	defer Client.Disconnect(context.Background())
 
 	discord, err := discordgo.New("Bot " + Token)
 	if err != nil {
@@ -63,15 +61,13 @@ func main() {
 	fmt.Println("Bot is now running. Press CRTL-C to exit")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	go func() {
+	defer func() {
 		<-sc
 		//closes conentions upon reciviing an interupt
 		fmt.Println("\r- Interrupt recived, Closing Bot")
 		Client.Disconnect(context.Background())
 		discord.Close()
 	}()
-	//if something breaks when closing it's the defer
-	defer discord.Close()
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -107,6 +103,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			go actions.RerollDice(m.Member.Nick, m.ChannelID, s, &LastRolls)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "schedule") == 0 {
 			//TODO make sceduling command for next session
+		} else if strings.Compare(strings.ToLower(cmdGiven), "testing") == 0 {
+			err := actions.SaveCharacter(data.Character{Name: m.Member.Nick, LastRoll: LastRolls[m.Member.Nick]}, Client)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 

@@ -10,23 +10,45 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	database   = "Characters"
+	collection = "Sheets"
+)
+
 //SaveCharacter saves player data to a noSQL db
 func SaveCharacter(character data.Character, client *mongo.Client) error {
-	collection := client.Database("my_database").Collection("Characters")
-	insertResult, err := collection.InsertOne(context.TODO(), character)
-	if err != nil {
-		return err
+	collection := client.Database(database).Collection(collection)
+	//will get readded when I figure out why discordgo isn't giving be user discriminator
+	//filter := bson.D{{Key: "name", Value: character.Name}}
+	filter := bson.M{"name": character.Name /*, "user": character.User*/}
+	update := bson.M{"$set": character}
+	updateResult, err1 := collection.UpdateOne(context.TODO(), filter, update)
+	if err1 != nil {
+		return err1
+		//checks if there was a document that was updated and if so finsih saving
+	} else if updateResult.MatchedCount == 0 {
+		log.Println("Failed to find mathcing document, making a new one")
+	} else if updateResult.MatchedCount == 1 {
+		log.Println("Document Was updated")
+		return nil
+	}
+	//Creates a new document if there wasn't one already
+	insertResult, err2 := collection.InsertOne(context.TODO(), character)
+	if err2 != nil {
+		return err2
 	}
 	log.Println("Inserted post with ID:", insertResult.InsertedID)
 	return nil
 }
 
-//LoadCharacter loads a given character
-func LoadCharacter(name string, client *mongo.Client) (data.Character, error) {
-	collection := client.Database("my_database").Collection("Characters")
-	filter := bson.D{}
+//LoadCharacter loads a given character by name, I'm probably also gonna require it to look up User ID
+func LoadCharacter(name string, user string, client *mongo.Client) (data.Character, error) {
+	filter := bson.M{"name": name /*, "user": user*/}
+	//filter :=  bson.D{{Key: "name", Value: name}, {Key: "user", Value: user}}
+	collection := client.Database(database).Collection(collection)
 	var character data.Character
-	err := collection.FindOne(nil, filter).Decode(&character)
+	//Finds a document with name and decodes it into the variable; character
+	err := collection.FindOne(context.TODO(), filter).Decode(&character)
 	if err != nil {
 		return character, err
 	}
