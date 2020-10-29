@@ -11,16 +11,18 @@ import (
 )
 
 const (
-	database   = "Characters"
-	collection = "Sheets"
+	//Database connectiong to
+	Database = "Characters"
+	//Collection reading from
+	Collection = "Sheets"
 )
 
 //SaveCharacter saves player data to a noSQL db
 func SaveCharacter(character data.Character, client *mongo.Client) error {
-	collection := client.Database(database).Collection(collection)
+	collection := client.Database(Database).Collection(Collection)
 	//will get readded when I figure out why discordgo isn't giving be user discriminator
 	//filter := bson.D{{Key: "name", Value: character.Name}}
-	filter := bson.M{"name": character.Name /*, "user": character.User*/}
+	filter := bson.M{"name": character.Name, "user": character.User}
 	update := bson.M{"$set": character}
 	updateResult, err1 := collection.UpdateOne(context.TODO(), filter, update)
 	if err1 != nil {
@@ -43,9 +45,9 @@ func SaveCharacter(character data.Character, client *mongo.Client) error {
 
 //LoadCharacter loads a given character by name, I'm probably also gonna require it to look up User ID
 func LoadCharacter(name string, user string, client *mongo.Client) (data.Character, error) {
-	filter := bson.M{"name": name /*, "user": user*/}
+	filter := bson.M{"name": name, "user": user}
 	//filter :=  bson.D{{Key: "name", Value: name}, {Key: "user", Value: user}}
-	collection := client.Database(database).Collection(collection)
+	collection := client.Database(Database).Collection(Collection)
 	var character data.Character
 	//Finds a document with name and decodes it into the variable; character
 	err := collection.FindOne(context.TODO(), filter).Decode(&character)
@@ -56,7 +58,7 @@ func LoadCharacter(name string, user string, client *mongo.Client) (data.Charact
 }
 
 //ConnectDB makes a client that can be called again and again to reference the database, call this first to create a Client
-func ConnectDB() *mongo.Client {
+func ConnectDB() (*mongo.Client, error) {
 	// Set client options
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 
@@ -64,14 +66,14 @@ func ConnectDB() *mongo.Client {
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	// Check the connection
 	err = client.Ping(context.TODO(), nil)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	return client
+	return client, nil
 }

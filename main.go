@@ -24,8 +24,8 @@ import (
 var (
 	// Token for the bot
 	Token string
-	// LastRolls keeps track of the last player roll
-	LastRolls map[string]data.RollHistory
+	// Characters keeps track of players
+	Characters map[string]*data.Character
 	//Client is the cpnnection to the database
 	Client *mongo.Client
 )
@@ -35,13 +35,18 @@ func init() {
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
-	LastRolls = make(map[string]data.RollHistory)
+	Characters = make(map[string]*data.Character)
 }
 
 func main() {
 	//opens connection the the database to load in relevant data, also closes it when program finishes running
-	Client = actions.ConnectDB()
-
+	var err error
+	Client, err = actions.ConnectDB()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	loadCharacters()
 	discord, err := discordgo.New("Bot " + Token)
 	if err != nil {
 		log.Println("error creating Discord session,", err)
@@ -96,15 +101,19 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Printf("%s; offending Command %s\n", err, m.Content)
 			return
 		}
+		Characters[m.Author.ID].User = m.Author.ID
+		log.Printf("WTF:%v\n", Characters[m.Author.ID].User)
 		//checks what the other commands are, this should probably be made into a router
+		// m refferences the message
+		//TODO change m to a better variable name
 		if matched {
-			go actions.RollDice(cmdGiven, m.Member.Nick, m.ChannelID, s, &LastRolls)
+			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID])
 		} else if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
-			go actions.RerollDice(m.Member.Nick, m.ChannelID, s, &LastRolls)
+			go actions.RerollDice(Characters[m.Author.ID], m.ChannelID, s)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "schedule") == 0 {
 			//TODO make sceduling command for next session
 		} else if strings.Compare(strings.ToLower(cmdGiven), "testing") == 0 {
-			err := actions.SaveCharacter(data.Character{Name: m.Member.Nick, LastRoll: LastRolls[m.Member.Nick]}, Client)
+			err := actions.SaveCharacter(*Characters[m.Author.ID], Client)
 			if err != nil {
 				log.Println(err)
 			}
@@ -117,4 +126,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 func trimPrefix(s string) string {
 	_, i := utf8.DecodeRuneInString(s)
 	return s[i:]
+}
+
+//loadCharacters caches all the characters from the DB
+func loadCharacters() {
+	Client.Database(actions.Database).Collection(actions.Collection)
 }

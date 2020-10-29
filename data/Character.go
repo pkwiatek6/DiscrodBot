@@ -3,7 +3,7 @@ package data
 //Character contains all the data a charcter needs
 type Character struct {
 	//will be readded later, discordgo doesn't return username or discriminators
-	//User         string      `bson:"user" json:"user"`
+	User         string      `bson:"user" json:"user"`
 	Name         string      `bson:"name" json:"name"`
 	Natrue       string      `bson:"natrue" json:"natrue"`
 	Clan         string      `bson:"clan" json:"clan"`
