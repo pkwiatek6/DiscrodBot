@@ -46,7 +46,6 @@ func main() {
 		return
 	}
 	log.Println("Connection to Database established")
-	//loadCharacters()
 	discord, err := discordgo.New("Bot " + Token)
 	if err != nil {
 		log.Println("Error creating Discord session: ", err)
