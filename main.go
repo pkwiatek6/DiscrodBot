@@ -46,7 +46,7 @@ func main() {
 		log.Println(err)
 		return
 	}
-	loadCharacters()
+	//loadCharacters()
 	discord, err := discordgo.New("Bot " + Token)
 	if err != nil {
 		log.Println("error creating Discord session,", err)
@@ -78,10 +78,20 @@ func main() {
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	var cmdGiven string
-
 	//bot should never read it's own output
 	if m.Author.ID == s.State.User.ID {
 		return
+	}
+	if m.Author.Bot {
+		return
+	}
+	if Characters[m.Author.ID] == nil {
+		//Characters[m.Author.ID] = &data.Character{User: m.Author.ID, Name: m.Member.Nick, LastRoll: data.RollHistory{}}
+		Characters[m.Author.ID] = new(data.Character)
+		Characters[m.Author.ID].User = m.Author.ID
+		Characters[m.Author.ID].Name = m.Member.Nick
+		Characters[m.Author.ID].LastRoll = *new(data.RollHistory)
+
 	}
 	if strings.Compare(strings.ToLower(m.Content), "flip a coin") == 0 {
 		go actions.FlipCoin(m.ChannelID, m.Member.Nick, s)
@@ -101,8 +111,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Printf("%s; offending Command %s\n", err, m.Content)
 			return
 		}
-		Characters[m.Author.ID].User = m.Author.ID
-		log.Printf("WTF:%v\n", Characters[m.Author.ID].User)
 		//checks what the other commands are, this should probably be made into a router
 		// m refferences the message
 		//TODO change m to a better variable name

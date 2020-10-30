@@ -29,7 +29,7 @@ func SaveCharacter(character data.Character, client *mongo.Client) error {
 		return err1
 		//checks if there was a document that was updated and if so finsih saving
 	} else if updateResult.MatchedCount == 0 {
-		log.Println("Failed to find mathcing document, making a new one")
+		log.Println("Failed to find matching document, making a new one")
 	} else if updateResult.MatchedCount == 1 {
 		log.Println("Document Was updated")
 		return nil

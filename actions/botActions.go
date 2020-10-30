@@ -62,14 +62,14 @@ func RerollDice(character *data.Character, channel string, session *discordgo.Se
 	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC)
 	//character.LastRoll = data.RollHistory{Rolls: character.LastRoll.Rolls, DC: character.LastRoll.DC, Reason: character.LastRoll.Reason}
 	if successes >= 1 {
-		toPost := fmt.Sprintf("```%s got %d Successes%s\nRerolls %v -> %v```", character.Name, successes, character.LastRoll.Reason, failedRolls, newRolls)
+		toPost := fmt.Sprintf("```%s got %d Successes%s\nRerolls %v -> %v```", character.Name, successes, character.LastRoll.Reason, failedRolls, character.LastRoll.Rolls)
 		session.ChannelMessageSend(channel, toPost)
 
 	} else if successes == 0 {
-		toPost := fmt.Sprintf("```%s Failed%s\nRerolls %v -> %v```", character.Name, character.LastRoll.Reason, failedRolls, newRolls)
+		toPost := fmt.Sprintf("```%s Failed%s\nRerolls %v -> %v```", character.Name, character.LastRoll.Reason, failedRolls, character.LastRoll.Rolls)
 		session.ChannelMessageSend(channel, toPost)
 	} else {
-		toPost := fmt.Sprintf("```%s got a Botch%s\nRerolls %v -> %v```", character.Name, character.LastRoll.Reason, failedRolls, newRolls)
+		toPost := fmt.Sprintf("```%s got a Botch%s\nRerolls %v -> %v```", character.Name, character.LastRoll.Reason, failedRolls, character.LastRoll.Rolls)
 		session.ChannelMessageSend(channel, toPost)
 	}
 }
@@ -77,6 +77,7 @@ func RerollDice(character *data.Character, channel string, session *discordgo.Se
 //RollDice rolls the dice for a check. DC is expected
 func RollDice(c string, channel string, session *discordgo.Session, character *data.Character) {
 	toRoll := strings.Split(c, ",")
+	//var reason string
 	if len(toRoll) < 2 {
 		log.Println(errors.New("Roll Dice: Not enough inputs for command"))
 		return
@@ -95,20 +96,20 @@ func RollDice(c string, channel string, session *discordgo.Session, character *d
 		return
 	}
 	//makes an integer array the size of the number of dice rolled and populates it
-	diceResults := make([]int, numDice)
+	character.LastRoll.Rolls = make([]int, numDice)
 	for i := 0; i < numDice; i++ {
-		diceResults[i] = RollD10()
+		character.LastRoll.Rolls[i] = RollD10()
 	}
-	successes := CountSuc(diceResults, character.LastRoll.DC)
-	character.LastRoll = data.RollHistory{Rolls: diceResults}
+	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC)
+	//character.LastRoll = data.RollHistory{Rolls: diceResults, DC: character.LastRoll.DC, Reason: reason}
 	if successes >= 1 {
-		toPost := fmt.Sprintf("```%s got %d Successes%s\nRolled %v```", character.Name, successes, character.LastRoll.Reason, diceResults)
+		toPost := fmt.Sprintf("```%s got %d Successes%s\nRolled %v```", character.Name, successes, character.LastRoll.Reason, character.LastRoll.Rolls)
 		session.ChannelMessageSend(channel, toPost)
 	} else if successes == 0 {
-		toPost := fmt.Sprintf("```%s Failed%s\nRolled %v```", character.Name, character.LastRoll.Reason, diceResults)
+		toPost := fmt.Sprintf("```%s Failed%s\nRolled %v```", character.Name, character.LastRoll.Reason, character.LastRoll.Rolls)
 		session.ChannelMessageSend(channel, toPost)
 	} else {
-		toPost := fmt.Sprintf("```%s got a Botch%s\nRolled %v```", character.Name, character.LastRoll.Reason, diceResults)
+		toPost := fmt.Sprintf("```%s got a Botch%s\nRolled %v```", character.Name, character.LastRoll.Reason, character.LastRoll.Rolls)
 		session.ChannelMessageSend(channel, toPost)
 	}
 }
