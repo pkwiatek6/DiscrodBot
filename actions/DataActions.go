@@ -57,6 +57,33 @@ func LoadCharacter(name string, user string, client *mongo.Client) (data.Charact
 	return character, nil
 }
 
+//LoadAllCharacters loads all the characters into memory
+func LoadAllCharacters(client *mongo.Client) (map[string]*data.Character, error) {
+	var results []data.Character
+	var toReturn = make(map[string]*data.Character)
+	cursor, err := client.Database(Database).Collection(Collection).Find(context.TODO(), bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	cursor.All(context.TODO(), &results)
+	for _, result := range results {
+		toReturn[result.User] = &result
+	}
+	return toReturn, nil
+}
+
+//SaveAllCharacters saves all the characters to the DB
+func SaveAllCharacters(Characters map[string]*data.Character, client *mongo.Client) error {
+	var err error
+	for _, character := range Characters {
+		err = SaveCharacter(*character, client)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 //ConnectDB makes a client that can be called again and again to reference the database, call this first to create a Client
 func ConnectDB() (*mongo.Client, error) {
 	// Set client options

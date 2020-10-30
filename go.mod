@@ -8,7 +8,6 @@ require (
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/klauspost/compress v1.11.2 // indirect
-	github.com/sirupsen/logrus v1.4.2
 	go.mongodb.org/mongo-driver v1.4.2
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897 // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
