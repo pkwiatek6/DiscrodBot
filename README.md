@@ -17,3 +17,8 @@ Flip a coin - flips a coin
 
 /r - rerolls lowest three dice
 /reroll - rerolls lowest three dice
+
+### Commands in progress
+/testing
+/Schedule
+/
