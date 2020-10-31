@@ -16,9 +16,12 @@ To run the bot use `./DiscrodBot -t BOT_TOKEN`
 Flip a coin - flips a coin
 
 /r - rerolls lowest three dice
+
 /reroll - rerolls lowest three dice
 
 ### Commands in progress
-/testing
-/Schedule
-/
+/testing - effects currently unknown - peters a mad man
+
+/Schedule - used to schedule future sessions between players
+
+
