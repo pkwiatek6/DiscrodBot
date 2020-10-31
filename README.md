@@ -12,11 +12,11 @@ To run the bot use `./DiscrodBot -t BOT_TOKEN`
 
 /N,DC,Reason - similar to rolling dice but outputs the reason for the roll as well
 
-Flip a coin - flips a coin - no beginning character required
-
 /r - rerolls lowest three dice
 
 /reroll - rerolls lowest three dice
+
+Flip a coin - flips a coin - no beginning character required
 
 ## Commands in Progress
 /testing - effects currently unknown - peter is a mad man
