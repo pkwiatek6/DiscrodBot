@@ -18,7 +18,7 @@ Flip a coin - flips a coin - no beginning character required
 
 /reroll - rerolls lowest three dice
 
-### Commands in progress
+## Commands in Progress
 /testing - effects currently unknown - peter is a mad man
 
 /Schedule - used to schedule future sessions between players
