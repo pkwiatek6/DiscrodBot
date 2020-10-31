@@ -8,19 +8,18 @@ To run the bot use `./DiscrodBot -t BOT_TOKEN`
 ## Commands
 ! or / can both be used for commands
 
-/N,DC - N is number of dice to roll, DC is DC of the check
-* Rolls N dice, does proper math vs DC to get number of sucesses
+/N,DC - N is number of dice to roll, DC is DC of the check - Rolls N dice, does proper math vs DC to get number of sucesses)
 
-/N,DC,Reason - simmilar to rolling dice but outputs the reason for the roll as well
+/N,DC,Reason - similar to rolling dice but outputs the reason for the roll as well
 
-Flip a coin - flips a coin
+Flip a coin - flips a coin - no beginning character required
 
 /r - rerolls lowest three dice
 
 /reroll - rerolls lowest three dice
 
 ### Commands in progress
-/testing - effects currently unknown - peters a mad man
+/testing - effects currently unknown - peter is a mad man
 
 /Schedule - used to schedule future sessions between players
 
