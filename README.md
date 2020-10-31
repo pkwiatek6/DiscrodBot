@@ -5,7 +5,7 @@ After downloading the files run `go build` to create the executable
 
 To run the bot use `./DiscrodBot -t BOT_TOKEN`
 
-! or / can both be used for commands
+! or / can be used for commands
 
 ## Commands
 /N,DC - N is number of dice to roll, DC is DC of the check - Rolls N dice, does proper math vs DC to get number of sucesses)
