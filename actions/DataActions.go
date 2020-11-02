@@ -2,7 +2,6 @@ package actions
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/pkwiatek6/DiscrodBot/data"
@@ -68,7 +67,6 @@ func LoadAllCharacters(client *mongo.Client) (map[string]*data.Character, error)
 	cursor.All(context.TODO(), &results)
 	for _, character := range results {
 		toReturn[character.User] = &character
-		fmt.Println(character)
 	}
 	return toReturn, nil
 }

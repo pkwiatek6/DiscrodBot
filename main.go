@@ -100,9 +100,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	//if there is no character it makes one
+	log.Println(m.Author.ID + " : " + m.Member.Nick)
 	if Characters[m.Author.ID] == nil {
 		//Characters[m.Author.ID] = &data.Character{User: m.Author.ID, Name: m.Member.Nick, LastRoll: data.RollHistory{}}
-		log.Println(m.Author.ID + " : " + m.Member.Nick)
 		Characters[m.Author.ID] = new(data.Character)
 		Characters[m.Author.ID].User = m.Author.ID
 		Characters[m.Author.ID].Name = m.Member.Nick
