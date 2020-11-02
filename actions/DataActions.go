@@ -70,7 +70,6 @@ func LoadAllCharacters(client *mongo.Client) (map[string]*data.Character, error)
 		toReturn[character.User] = &character
 		fmt.Println(character)
 	}
-	fmt.Println(results)
 	return toReturn, nil
 }
 
