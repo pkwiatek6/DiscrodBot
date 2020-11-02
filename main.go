@@ -102,17 +102,17 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//if there is no character it makes one
 	if Characters[m.Author.ID] == nil {
 		//Characters[m.Author.ID] = &data.Character{User: m.Author.ID, Name: m.Member.Nick, LastRoll: data.RollHistory{}}
+		log.Println(m.Author.ID + " : " + m.Member.Nick)
 		Characters[m.Author.ID] = new(data.Character)
 		Characters[m.Author.ID].User = m.Author.ID
 		Characters[m.Author.ID].Name = m.Member.Nick
 		Characters[m.Author.ID].DiscordUser = m.Author.String()
 		Characters[m.Author.ID].LastRoll = *new(data.RollHistory)
-		/*err := actions.SaveCharacter(*Characters[m.Author.ID], Client)
+		err := actions.SaveCharacter(*Characters[m.Author.ID], Client)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		*/
 	}
 	if strings.Compare(strings.ToLower(m.Content), "flip a coin") == 0 {
 		go actions.FlipCoin(m.ChannelID, m.Member.Nick, s)
