@@ -107,7 +107,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		Characters[m.Author.ID].Name = m.Member.Nick
 		Characters[m.Author.ID].DiscordUser = m.Author.String()
 		Characters[m.Author.ID].LastRoll = *new(data.RollHistory)
-		actions.SaveCharacter(*Characters[m.Author.ID], Client)
+		err := actions.SaveCharacter(*Characters[m.Author.ID], Client)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 
 	}
 	if strings.Compare(strings.ToLower(m.Content), "flip a coin") == 0 {
