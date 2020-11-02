@@ -69,6 +69,7 @@ func LoadAllCharacters(client *mongo.Client) (map[string]*data.Character, error)
 	for _, result := range results {
 		toReturn[result.User] = &result
 	}
+	fmt.Println(results)
 	for user, data := range toReturn {
 		fmt.Println("User:" + user + " | Name:" + data.Name + " | Name in map: " + toReturn[user].Name)
 	}
