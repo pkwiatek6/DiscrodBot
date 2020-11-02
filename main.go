@@ -100,7 +100,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.Bot {
 		return
 	}
-	//if there is no character it makes one
+	//if there is no character it makes one or loads one in if it can
 	if Characters[m.Author.ID] == nil {
 		var err error
 		Characters[m.Author.ID], err = actions.LoadCharacter(m.Member.Nick, m.Author.ID, Client)
