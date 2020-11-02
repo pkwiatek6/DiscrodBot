@@ -65,10 +65,11 @@ func main() {
 	}
 	log.Println("Connection to Discord opened")
 
-	Characters, err = actions.LoadAllCharacters(Client)
+	/*Characters, err = actions.LoadAllCharacters(Client)
 	if err != nil {
 		log.Println("Error loading all characters")
 	}
+	*/
 	log.Println("All Characters loaded")
 	fmt.Println("Bot is now running. Press CRTL-C or send SIGINT or SIGTERM to exit")
 	sc := make(chan os.Signal, 1)
@@ -100,18 +101,20 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	//if there is no character it makes one
-	log.Println(m.Author.ID + " : " + m.Member.Nick)
 	if Characters[m.Author.ID] == nil {
-		//Characters[m.Author.ID] = &data.Character{User: m.Author.ID, Name: m.Member.Nick, LastRoll: data.RollHistory{}}
-		Characters[m.Author.ID] = new(data.Character)
-		Characters[m.Author.ID].User = m.Author.ID
-		Characters[m.Author.ID].Name = m.Member.Nick
-		Characters[m.Author.ID].DiscordUser = m.Author.String()
-		Characters[m.Author.ID].LastRoll = *new(data.RollHistory)
-		err := actions.SaveCharacter(*Characters[m.Author.ID], Client)
+		var err error
+		Characters[m.Author.ID], err = actions.LoadCharacter(m.Member.Nick, m.Author.ID, Client)
 		if err != nil {
-			log.Println(err)
-			return
+			Characters[m.Author.ID] = new(data.Character)
+			Characters[m.Author.ID].User = m.Author.ID
+			Characters[m.Author.ID].Name = m.Member.Nick
+			Characters[m.Author.ID].DiscordUser = m.Author.String()
+			Characters[m.Author.ID].LastRoll = *new(data.RollHistory)
+			err = actions.SaveCharacter(*Characters[m.Author.ID], Client)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}
 	if strings.Compare(strings.ToLower(m.Content), "flip a coin") == 0 {
@@ -141,7 +144,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			go actions.RerollDice(Characters[m.Author.ID], m.ChannelID, s)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "schedule") == 0 {
 			//TODO make sceduling command for next session
-		} else if strings.Compare(strings.ToLower(cmdGiven), "testing") == 0 {
+		} else if strings.Compare(strings.ToLower(cmdGiven), "testsave") == 0 {
 			//testing forcibly saves the character of the person who called it
 			err := actions.SaveCharacter(*Characters[m.Author.ID], Client)
 			if err != nil {

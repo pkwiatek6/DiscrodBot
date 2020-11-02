@@ -44,16 +44,16 @@ func SaveCharacter(character data.Character, client *mongo.Client) error {
 }
 
 //LoadCharacter loads a given character by name, I'm probably also gonna require it to look up User ID
-func LoadCharacter(name string, user string, client *mongo.Client) (data.Character, error) {
+func LoadCharacter(name string, user string, client *mongo.Client) (*data.Character, error) {
 	filter := bson.M{"name": name, "user": user}
 	collection := client.Database(Database).Collection(Collection)
 	var character data.Character
 	//Finds a document with name and decodes it into the variable character
 	err := collection.FindOne(context.TODO(), filter).Decode(&character)
 	if err != nil {
-		return character, err
+		return &character, err
 	}
-	return character, nil
+	return &character, nil
 }
 
 //LoadAllCharacters loads all the characters into memory

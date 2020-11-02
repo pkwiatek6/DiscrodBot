@@ -81,8 +81,9 @@ func RollDice(c string, channel string, session *discordgo.Session, character *d
 	if len(toRoll) < 2 {
 		log.Println(errors.New("Roll Dice: Not enough inputs for command"))
 		return
-	}
-	if len(toRoll) == 3 {
+	} else if len(toRoll) == 2 {
+		character.LastRoll.Reason = ""
+	} else if len(toRoll) == 3 {
 		character.LastRoll.Reason = " trying to " + toRoll[2]
 	}
 	numDice, err := strconv.Atoi(toRoll[0])
