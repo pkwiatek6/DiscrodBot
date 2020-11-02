@@ -69,8 +69,8 @@ func main() {
 	if err != nil {
 		log.Println("Error loading all characters")
 	}
-	*/
 	log.Println("All Characters loaded")
+	*/
 	fmt.Println("Bot is now running. Press CRTL-C or send SIGINT or SIGTERM to exit")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)

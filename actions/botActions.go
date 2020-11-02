@@ -60,16 +60,16 @@ func RerollDice(character *data.Character, channel string, session *discordgo.Se
 		}
 	}
 	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC)
-	//character.LastRoll = data.RollHistory{Rolls: character.LastRoll.Rolls, DC: character.LastRoll.DC, Reason: character.LastRoll.Reason}
+	//new rolls is used to show what the 3 dice were rerolled into
 	if successes >= 1 {
-		toPost := fmt.Sprintf("```%s got %d Successes%s\nRerolls %v -> %v```", character.Name, successes, character.LastRoll.Reason, failedRolls, character.LastRoll.Rolls)
+		toPost := fmt.Sprintf("```%s got %d Successes%s\nRerolls %v -> %v```", character.Name, successes, character.LastRoll.Reason, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 
 	} else if successes == 0 {
-		toPost := fmt.Sprintf("```%s Failed%s\nRerolls %v -> %v```", character.Name, character.LastRoll.Reason, failedRolls, character.LastRoll.Rolls)
+		toPost := fmt.Sprintf("```%s Failed%s\nRerolls %v -> %v```", character.Name, character.LastRoll.Reason, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 	} else {
-		toPost := fmt.Sprintf("```%s got a Botch%s\nRerolls %v -> %v```", character.Name, character.LastRoll.Reason, failedRolls, character.LastRoll.Rolls)
+		toPost := fmt.Sprintf("```%s got a Botch%s\nRerolls %v -> %v```", character.Name, character.LastRoll.Reason, failedRolls, newRolls)
 		session.ChannelMessageSend(channel, toPost)
 	}
 }
