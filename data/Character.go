@@ -4,6 +4,7 @@ package data
 type Character struct {
 	//will be readded later, discordgo doesn't return username or discriminators
 	User         string      `bson:"user" json:"user"`
+	DiscordUser  string      `bson:"disUser" json:"disUser"`
 	Name         string      `bson:"name" json:"name"`
 	Natrue       string      `bson:"natrue" json:"natrue"`
 	Clan         string      `bson:"clan" json:"clan"`
