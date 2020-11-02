@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -69,7 +70,7 @@ func main() {
 		log.Println("Error loading all characters")
 	}
 	log.Println("All Characters loaded")
-	log.Println("Bot is now running. Press CRTL-C to exit")
+	fmt.Println("Bot is now running. Press CRTL-C or send SIGINT or SIGTERM to exit")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	defer func() {
@@ -135,6 +136,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else if strings.Compare(strings.ToLower(cmdGiven), "schedule") == 0 {
 			//TODO make sceduling command for next session
 		} else if strings.Compare(strings.ToLower(cmdGiven), "testing") == 0 {
+			//testing forcibly saves the character of the person who called it
 			err := actions.SaveCharacter(*Characters[m.Author.ID], Client)
 			if err != nil {
 				log.Println(err)
