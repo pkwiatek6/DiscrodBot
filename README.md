@@ -19,7 +19,7 @@ To run the bot use `./DiscrodBot -t BOT_TOKEN`
 Flip a coin - flips a coin - no beginning character required
 
 ## Commands in Progress
-/testing - effects currently unknown - peter is a mad man
+/testing - debug command, force pushes data to the datbase currently.
 
 /Schedule - used to schedule future sessions between players
 
