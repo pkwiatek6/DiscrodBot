@@ -65,6 +65,8 @@ func main() {
 	}
 	log.Println("Connection to Discord opened")
 
+	//I used to load in all characters but since for my use the bot runs on the same machine as the db
+	// there is no reason to double ram usage, although it could be changed if db is elsewhere
 	/*Characters, err = actions.LoadAllCharacters(Client)
 	if err != nil {
 		log.Println("Error loading all characters")
@@ -103,6 +105,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//if there is no character it makes one or loads one in if it can
 	if Characters[m.Author.ID] == nil {
 		var err error
+		//loads in the character when a command is called, **TODO** unload chracter when done
 		Characters[m.Author.ID], err = actions.LoadCharacter(m.Member.Nick, m.Author.ID, Client)
 		if err != nil {
 			Characters[m.Author.ID] = new(data.Character)
@@ -138,6 +141,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		//checks what the other commands are, this should probably be made into a router
 		// m refferences the message
 		//TODO change m to a better variable name
+		//This needs to be changed into a map(str command,func) because this is gonna get messy if more commands are added
 		if matched {
 			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID])
 		} else if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
