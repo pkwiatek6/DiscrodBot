@@ -28,6 +28,8 @@ var (
 	Characters map[string]*data.Character
 	//Client is the cpnnection to the database
 	Client *mongo.Client
+	//Commands lists everything the bot can do
+	//Commands map[string]*data.Command
 )
 
 func init() {
@@ -36,6 +38,7 @@ func init() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
 	Characters = make(map[string]*data.Character)
+	//Commands = make(map[string]*data.Command)
 }
 
 func main() {

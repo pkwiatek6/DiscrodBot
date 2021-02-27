@@ -15,7 +15,7 @@ import (
 
 //RollD10 rolls a single d10 and returns the outcome
 func RollD10() int {
-	return 1 + rand.Intn(9)
+	return 1 + rand.Intn(10)
 }
 
 //FlipCoin flips a coin and returns outcome
