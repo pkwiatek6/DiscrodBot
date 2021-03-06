@@ -151,6 +151,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				log.Println(err)
 			}
 		}
+		//TODO show and set commands for showing and setting data
 	}
 
 }
