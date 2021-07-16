@@ -139,7 +139,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// m refferences the message
 		//TODO change m to a better variable name
 		if matched {
-			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID])
+			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID], false)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
 			go actions.RerollDice(Characters[m.Author.ID], m.ChannelID, s)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "schedule") == 0 {
@@ -150,6 +150,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err != nil {
 				log.Println(err)
 			}
+		} else if strings.Compare(strings.ToLower(cmdGiven), "sr") == 0 {
+			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID], true)
 		}
 		//TODO show and set commands for showing and setting data
 	}

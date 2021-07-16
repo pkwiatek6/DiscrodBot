@@ -29,12 +29,13 @@ func FlipCoin(channel string, nick string, session *discordgo.Session) {
 }
 
 //CountSuc counts the number of successes contained in diceReults
-func CountSuc(diceResults []int, DC int) int {
+// Extra logic is needed because 10's count as 2 success only when it is your specialty otherwise they count as 1
+func CountSuc(diceResults []int, DC int, isSpecial bool) int {
 	var successes = 0
 	for i := 0; i < len(diceResults); i++ {
-		if diceResults[i] == 10 {
+		if diceResults[i] == 10 && isSpecial {
 			successes += 2
-		} else if diceResults[i] >= DC && diceResults[i] != 10 {
+		} else if diceResults[i] >= DC && !isSpecial {
 			successes++
 		} else if diceResults[i] == 1 && diceResults[i] < DC {
 			successes--
@@ -59,7 +60,8 @@ func RerollDice(character *data.Character, channel string, session *discordgo.Se
 			character.LastRoll.Rolls[i] = newRolls[i]
 		}
 	}
-	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC)
+	//TODO: Find a way to keep track if previous roll was special.
+	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC, false)
 	//new rolls is used to show what the 3 dice were rerolled into
 	if successes >= 1 {
 		toPost := fmt.Sprintf("```%s got %d Successes%s\nRerolls %v -> %v```", character.Name, successes, character.LastRoll.Reason, failedRolls, newRolls)
@@ -75,7 +77,7 @@ func RerollDice(character *data.Character, channel string, session *discordgo.Se
 }
 
 //RollDice rolls the dice for a check. DC is expected
-func RollDice(c string, channel string, session *discordgo.Session, character *data.Character) {
+func RollDice(c string, channel string, session *discordgo.Session, character *data.Character, isSpecial bool) {
 	toRoll := strings.Split(c, ",")
 	//var reason string
 	if len(toRoll) < 2 {
@@ -101,7 +103,7 @@ func RollDice(c string, channel string, session *discordgo.Session, character *d
 	for i := 0; i < numDice; i++ {
 		character.LastRoll.Rolls[i] = RollD10()
 	}
-	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC)
+	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC, isSpecial)
 	//character.LastRoll = data.RollHistory{Rolls: diceResults, DC: character.LastRoll.DC, Reason: reason}
 	if successes >= 1 {
 		toPost := fmt.Sprintf("```%s got %d Successes%s\nRolled %v```", character.Name, successes, character.LastRoll.Reason, character.LastRoll.Rolls)
