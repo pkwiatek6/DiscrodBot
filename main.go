@@ -137,9 +137,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		//checks what the other commands are, this should probably be made into a router
 		// m refferences the message
-		//TODO change m to a better variable name
 		if matched {
-			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID], false)
+			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID], true)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
 			go actions.RerollDice(Characters[m.Author.ID], m.ChannelID, s)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "schedule") == 0 {
