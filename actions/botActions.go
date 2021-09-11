@@ -25,7 +25,6 @@ func FlipCoin(channel string, nick string, session *discordgo.Session) {
 		return
 	}
 	session.ChannelMessageSend(channel, fmt.Sprintf("```%s flipped a coin and it came up %s```", nick, "Tails"))
-	return
 }
 
 //CountSuc counts the number of successes contained in diceReults
@@ -117,7 +116,11 @@ func RollDice(c string, channel string, session *discordgo.Session, character *d
 	}
 }
 
+func WouldYouKindly() {
+
+}
+
 //ScheduleSession saves reminders for next sessions, will ping everyone, should only be accessible to StoryTeller
 func ScheduleSession() {
-
+	//Not yet implemented
 }

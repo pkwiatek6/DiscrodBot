@@ -28,6 +28,13 @@ var (
 	Characters map[string]*data.Character
 	//Client is the cpnnection to the database
 	Client *mongo.Client
+
+	commands = []*discordgo.ApplicationCommand{
+		{
+			Name:        "flip-a-coin",
+			Description: "Flips a coin",
+		},
+	}
 )
 
 func init() {
@@ -138,6 +145,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		//checks what the other commands are, this should probably be made into a router
 		// m refferences the message
 		if matched {
+			//true means it makes all 10's rolled count as 2 succeses.
 			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID], true)
 		} else if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
 			go actions.RerollDice(Characters[m.Author.ID], m.ChannelID, s)
