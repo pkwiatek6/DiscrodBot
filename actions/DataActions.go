@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	//Database connectiong to
+	//Database connecting to
 	Database = "Characters"
 	//Collection reading from
 	Collection = "Sheets"

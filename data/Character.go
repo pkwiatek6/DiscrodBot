@@ -6,6 +6,7 @@ type Character struct {
 	User         string      `bson:"user" json:"user"`
 	Name         string      `bson:"name" json:"name"`
 	DiscordUser  string      `bson:"disUser" json:"disUser"`
+	FudgeRoll    int         `bson:"fudgeRoll" json:"fudgeRoll"`
 	Natrue       string      `bson:"natrue" json:"natrue"`
 	Clan         string      `bson:"clan" json:"clan"`
 	Demeanor     string      `bson:"demeanor" json:"demeanor"`

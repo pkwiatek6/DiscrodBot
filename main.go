@@ -22,8 +22,26 @@ import (
 )
 
 var (
+	discord *discordgo.Session
 	// Token for the bot
-	Token string
+	Token          = flag.String("t", "", "Bot acess token")
+	GuildID        = flag.String("GID", "", "Test Guild ID. IF not passed - bot registers commands globally")
+	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
+)
+
+func init() { flag.Parse() }
+
+func init() {
+	var err error
+	discord, err = discordgo.New("Bot " + *Token)
+	if err != nil {
+		log.Fatalln("Error creating Discord session: ", err)
+	}
+	log.Println("Connection to Discord established")
+}
+
+var (
+
 	// Characters keeps track of players
 	Characters map[string]*data.Character
 	//Client is the cpnnection to the database
@@ -31,16 +49,104 @@ var (
 
 	commands = []*discordgo.ApplicationCommand{
 		{
-			Name:        "flip-a-coin",
+			Name:        "coin",
 			Description: "Flips a coin",
 		},
+		{
+			Name:        "reroll",
+			Description: "Re-rolls lowest 3 dice that are lower than the DC by using willpower.",
+		},
+		/* To be implemetned when permissions are added to discordgo
+		{
+			Name:        "wyk",
+			Description: "Sets the minimum number of success you will get on your next roll",
+		},
+		*/
+		{
+			Name:        "roll",
+			Description: "Rolls a dice pool against a dc with and optional reason",
+			Options: []*discordgo.ApplicationCommandOption{
+
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "dice-pool",
+					Description: "Number of dice to roll",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "dc",
+					Description: "DC of the check",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "action",
+					Description: "What action you are trying to do.",
+					Required:    false,
+				},
+			},
+		},
 	}
+	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		"coin": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: actions.FlipCoin(i.Member.Nick),
+				},
+			})
+		},
+		"reroll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: actions.RerollDice(Characters[i.Member.User.ID]),
+				},
+			})
+		},
+		/* To be implemented when permissions are added in discordgo
+		"wyk": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: actions.WouldYouKindly(),
+				},
+			})
+		},
+		*/
+		"roll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+			var dicepool = int(i.ApplicationCommandData().Options[0].IntValue())
+			var dc = int(i.ApplicationCommandData().Options[1].IntValue())
+			var msg string
+			if len(i.ApplicationCommandData().Options) == 3 {
+				var reason = i.ApplicationCommandData().Options[2].StringValue()
+				msg = actions.RollDiceCommand(dicepool, dc, reason, Characters[i.Member.User.ID])
+			} else {
+				msg = actions.RollDiceCommand(dicepool, dc, "", Characters[i.Member.User.ID])
+			}
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: msg,
+				},
+			})
+		},
+	}
+	globalCommands = []*discordgo.ApplicationCommand{}
 )
 
 func init() {
+	discord.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		if handler, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+			handler(s, i)
+		}
 
-	flag.StringVar(&Token, "t", "", "Bot Token")
-	flag.Parse()
+	})
+}
+
+func init() {
 	rand.Seed(time.Now().UnixNano())
 	Characters = make(map[string]*data.Character)
 }
@@ -50,37 +156,38 @@ func main() {
 	var err error
 	Client, err = actions.ConnectDB()
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatalln(err)
 	}
+	log.Println(*Token)
 	log.Println("Connection to Database established")
-	discord, err := discordgo.New("Bot " + Token)
-	if err != nil {
-		log.Println("Error creating Discord session: ", err)
-		return
-	}
-	log.Println("Connection to Discord established")
+
 	//can add more handlers based on the discord api, the function passed must always accept a Session and a discord event
 	discord.AddHandler(messageCreate)
 
-	discord.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages)
-
 	err = discord.Open()
 	if err != nil {
-		log.Println("Error opening connection: ", err)
-		return
+		log.Fatalln("Error opening connection: ", err)
 	}
 	log.Println("Connection to Discord opened")
 
-	/*Characters, err = actions.LoadAllCharacters(Client)
+	Characters, err = actions.LoadAllCharacters(Client)
 	if err != nil {
-		log.Println("Error loading all characters")
+		log.Fatalln("Error loading all characters")
 	}
 	log.Println("All Characters loaded")
-	*/
+
 	fmt.Println("Bot is now running. Press CRTL-C or send SIGINT or SIGTERM to exit")
+
+	for _, v := range commands {
+		gCMD, err := discord.ApplicationCommandCreate(discord.State.User.ID, *GuildID, v)
+		if err != nil {
+			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
+		}
+		globalCommands = append(globalCommands, gCMD)
+	}
+
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	defer func() {
 		<-sc
 		//closes conentions upon reciviing an interupt
@@ -93,8 +200,17 @@ func main() {
 		if err != nil {
 			log.Println("Could not close connection to database", err)
 		}
+		if *RemoveCommands {
+			for _, v := range globalCommands {
+				err := discord.ApplicationCommandDelete(discord.State.User.ID, *GuildID, v.ID)
+				if err != nil {
+					log.Printf("Cannot delete '%v' command: %v", v.ID, err)
+				}
+			}
+		}
 		discord.Close()
 	}()
+
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -124,10 +240,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		}
 	}
-	if strings.Compare(strings.ToLower(m.Content), "flip a coin") == 0 {
-		go actions.FlipCoin(m.ChannelID, m.Member.Nick, s)
-		return
-	}
 	//Deals with commands, consumes the prefix(default / or !)
 	IsCommand, err := regexp.MatchString("[/!].*", m.Content)
 	if err != nil {
@@ -147,18 +259,22 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if matched {
 			//true means it makes all 10's rolled count as 2 succeses.
 			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID], true)
-		} else if strings.Compare(strings.ToLower(cmdGiven), "reroll") == 0 || strings.Compare(strings.ToLower(cmdGiven), "r") == 0 {
-			go actions.RerollDice(Characters[m.Author.ID], m.ChannelID, s)
-		} else if strings.Compare(strings.ToLower(cmdGiven), "schedule") == 0 {
-			//TODO make sceduling command for next session
+			return
+		}
+
+		matched, err = regexp.MatchString(`^(wyk)\s*[0-9]*`, cmdGiven)
+		if err != nil {
+			log.Printf("%s; offending Command %s\n", err, m.Content)
+		}
+
+		if matched {
+			go actions.WouldYouKindly(cmdGiven, m.ChannelID, s, Characters[m.Author.ID])
 		} else if strings.Compare(strings.ToLower(cmdGiven), "testsave") == 0 {
 			//testing forcibly saves the character of the person who called it
 			err := actions.SaveCharacter(*Characters[m.Author.ID], Client)
 			if err != nil {
 				log.Println(err)
 			}
-		} else if strings.Compare(strings.ToLower(cmdGiven), "sr") == 0 {
-			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID], true)
 		}
 		//TODO show and set commands for showing and setting data
 	}
