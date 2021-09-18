@@ -129,7 +129,9 @@ func RollDiceCommand(dicepool int, dc int, reason string, character *data.Charac
 			character.LastRoll.Rolls[i] = RollD10()
 		}
 	}
-	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC, true)
+
+	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC, false)
+
 	var toPost string
 	if reason != "" {
 		reg := regexp.MustCompile(`^\s*(?:trying)*\s*(?:to)*\s*`)
