@@ -176,6 +176,7 @@ func WouldYouKindly(minResultCmd string, channel string, session *discordgo.Sess
 }
 
 //isAuthUser will be used for the updated would you kindly func when permissions get added
+/*
 func isAuthUser(authRole string, list []string) bool {
 	for _, v := range list {
 		if strings.ToLower(v) == strings.ToLower(authRole) {
@@ -184,6 +185,7 @@ func isAuthUser(authRole string, list []string) bool {
 	}
 	return false
 }
+*/
 
 //ScheduleSession saves reminders for next sessions, will ping everyone, should only be accessible to StoryTeller
 func ScheduleSession() {

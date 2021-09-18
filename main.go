@@ -169,30 +169,31 @@ func init() {
 	Characters = make(map[string]*data.Character)
 }
 
-func main() {
+func init() {
 	//opens connection the the database to load in relevant data, also closes it when program finishes running
 	var err error
 	Client, err = actions.ConnectDB()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Println(*Token)
 	log.Println("Connection to Database established")
-
-	//can add more handlers based on the discord api, the function passed must always accept a Session and a discord event
-	discord.AddHandler(messageCreate)
-
-	err = discord.Open()
-	if err != nil {
-		log.Fatalln("Error opening connection: ", err)
-	}
-	log.Println("Connection to Discord opened")
-
 	Characters, err = actions.LoadAllCharacters(Client)
 	if err != nil {
 		log.Fatalln("Error loading all characters")
 	}
 	log.Println("All Characters loaded")
+
+}
+
+func main() {
+	err := discord.Open()
+	if err != nil {
+		log.Fatalln("Error opening connection: ", err)
+	}
+	log.Println("Connection to Discord opened")
+
+	//can add more handlers based on the discord api, the function passed must always accept a Session and a discord event
+	discord.AddHandler(messageCreate)
 
 	fmt.Println("Bot is now running. Press CRTL-C or send SIGINT or SIGTERM to exit")
 
