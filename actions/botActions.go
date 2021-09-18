@@ -38,13 +38,12 @@ func FlipCoin(nick string) string {
 }
 
 //CountSuc counts the number of successes contained in diceReults
-// Extra logic is needed because 10's count as 2 success only when it is your specialty otherwise they count as 1
-func CountSuc(diceResults []int, DC int, isSpecial bool) int {
+func CountSuc(diceResults []int, DC int) int {
 	var successes = 0
 	for i := 0; i < len(diceResults); i++ {
-		if diceResults[i] == 10 && isSpecial {
+		if diceResults[i] == 10 {
 			successes += 2
-		} else if diceResults[i] >= DC && !isSpecial {
+		} else if diceResults[i] >= DC {
 			successes++
 		} else if diceResults[i] == 1 && diceResults[i] < DC {
 			successes--
@@ -71,7 +70,7 @@ func RerollDice(character *data.Character) string {
 		}
 	}
 	//TODO: Find a way to keep track if previous roll was special.
-	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC, false)
+	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC)
 	var toPost string
 	if successes >= 1 {
 		toPost = fmt.Sprintf("```%s got %d Successes%s\nRerolls %v -> %v```", character.Name, successes, character.LastRoll.Reason, failedRolls, newRolls)
@@ -130,7 +129,7 @@ func RollDiceCommand(dicepool int, dc int, reason string, character *data.Charac
 		}
 	}
 
-	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC, false)
+	successes := CountSuc(character.LastRoll.Rolls, character.LastRoll.DC)
 
 	var toPost string
 	if reason != "" {

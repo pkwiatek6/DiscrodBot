@@ -63,6 +63,10 @@ var (
 		},
 		*/
 		{
+			Name:        "saveall",
+			Description: "Saves all users to database",
+		},
+		{
 			Name:        "roll",
 			Description: "Rolls a dice pool against a dc with and optional reason",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -115,6 +119,20 @@ var (
 			})
 		},
 		*/
+		"saveall": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			for key := range Characters {
+				err := actions.SaveCharacter(*Characters[key], Client)
+				if err != nil {
+					log.Println(err)
+				}
+			}
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "All data saved :)",
+				},
+			})
+		},
 		"roll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 			var dicepool = int(i.ApplicationCommandData().Options[0].IntValue())
