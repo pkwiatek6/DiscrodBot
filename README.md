@@ -14,6 +14,10 @@ To run the bot use `./DiscrodBot -t BOT_TOKEN`
 
 /coin - flips a coin - no beginning character required
 
+/wyk - for stroyteller use
+
+/saveall - save all users to database
+
 ## Legacy Commands 
 /N,DC - N is number of dice to roll, DC is DC of the check - Rolls N dice, does proper math vs DC to get number of sucesses)
 
