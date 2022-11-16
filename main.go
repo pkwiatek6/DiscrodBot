@@ -144,9 +144,10 @@ var (
 			if Characters[i.Member.User.ID] == nil {
 				Characters[i.Member.User.ID] = new(data.Character)
 				Characters[i.Member.User.ID].User = i.Member.User.ID
-				Characters[i.Member.User.ID].Name = i.Member.User.Username
+				Characters[i.Member.User.ID].Name = i.Member.Nick
 				Characters[i.Member.User.ID].DiscordUser = i.Member.User.String()
 				Characters[i.Member.User.ID].LastRoll = *new(data.RollHistory)
+				actions.SaveCharacter(*Characters[i.Member.User.ID], Client)
 
 			}
 			var dicepool = int(i.ApplicationCommandData().Options[0].IntValue())
