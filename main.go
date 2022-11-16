@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -118,28 +119,28 @@ var (
 		// To be implemented when permissions are added in discordgo
 		"wyk": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			//perms were copied from discord go example
-			/*
-				perms, err := s.ApplicationCommandPermissions(s.State.User.ID, i.GuildID, i.ApplicationCommandData().ID)
 
-				var restError *discordgo.RESTError
-				if errors.As(err, &restError) && restError.Message != nil && restError.Message.Code == discordgo.ErrCodeUnknownApplicationCommandPermissions {
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-						Type: discordgo.InteractionResponseChannelMessageWithSource,
-						Data: &discordgo.InteractionResponseData{
-							Content: ":x: No permission overwrites",
-						},
-					})
-					return
-				} else if err != nil {
-					log.Panic(err)
-				}
-			*/
+			_, err := s.ApplicationCommandPermissions(s.State.User.ID, i.GuildID, i.ApplicationCommandData().ID)
+
+			var restError *discordgo.RESTError
+			if errors.As(err, &restError) && restError.Message != nil && restError.Message.Code == discordgo.ErrCodeUnknownApplicationCommandPermissions {
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: ":x: No permission overwrites",
+					},
+				})
+				return
+			} else if err != nil {
+				log.Panic(err)
+			}
+
 			var minResults = int(i.ApplicationCommandData().Options[0].IntValue())
-
+			message := actions.WouldYouKindly(minResults, Characters[i.Member.User.ID])
 			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: actions.WouldYouKindly(minResults, Characters[i.Member.User.ID]),
+					Content: message,
 				},
 			})
 		},
