@@ -14,7 +14,7 @@ To run the bot use `./DiscrodBot -t BOT_TOKEN`
 
 /coin - flips a coin - no beginning character required
 
-/wyk - for stroyteller use
+/wyk - for storyteller use
 
 /saveall - save all users to database
 
