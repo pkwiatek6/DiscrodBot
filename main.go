@@ -141,19 +141,6 @@ var (
 			})
 		},
 		"roll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			//Create user if they do not exist in database
-			log.Fatal("Roll Call")
-			if Characters[i.Member.User.ID] == nil {
-				Characters[i.Member.User.ID] = new(data.Character)
-				Characters[i.Member.User.ID].User = i.Member.User.ID
-				Characters[i.Member.User.ID].Name = i.Member.Nick
-				Characters[i.Member.User.ID].DiscordUser = i.Member.User.String()
-				Characters[i.Member.User.ID].LastRoll = *new(data.RollHistory)
-				err := actions.SaveCharacter(*Characters[i.Member.User.ID], Client)
-				if err != nil {
-					log.Println(err)
-				}
-			}
 			var dicepool = int(i.ApplicationCommandData().Options[0].IntValue())
 			var dc = int(i.ApplicationCommandData().Options[1].IntValue())
 			var msg string
