@@ -54,14 +54,14 @@ var (
 			Description: "Re-rolls lowest 3 dice that are lower than the DC by using willpower.",
 		},
 		{
-			Name:        "wyk",
-			Description: "Sets the minimum number of success you will get on your next roll",
-			//DefaultMemberPermissions: &adminMemeberPermissions,
+			Name:                     "wyk",
+			Description:              "Sets the minimum number of success you will get on your next roll",
+			DefaultMemberPermissions: &adminMemeberPermissions,
 			Options: []*discordgo.ApplicationCommandOption{
 
 				{
 					Type:        discordgo.ApplicationCommandOptionInteger,
-					Name:        "minResults",
+					Name:        "min-results",
 					Description: "Minimum number of results wanted",
 					Required:    true,
 				},
