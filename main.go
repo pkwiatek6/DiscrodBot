@@ -116,7 +116,6 @@ var (
 		},
 		// To be implemented when permissions are added in discordgo
 		"wyk": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			log.Fatal("wyk Call")
 			var minResults = int(i.ApplicationCommandData().Options[0].IntValue())
 			message := actions.WouldYouKindly(minResults, Characters[i.Member.User.ID])
 			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
