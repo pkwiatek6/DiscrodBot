@@ -68,8 +68,11 @@ func LoadAllCharacters(client *mongo.Client) (map[string]*data.Character, error)
 	if err != nil {
 		return nil, err
 	}
-	for _, character := range results {
-		toReturn[character.User] = &character
+	for key, character := range results {
+		//issue is character location pointer is being reused evertime it's being loaded
+		// thts why the user id work but everything else is copied
+		//this might work
+		toReturn[character.User] = &results[key]
 	}
 	return toReturn, nil
 }
