@@ -83,9 +83,8 @@ func RerollDice(character *data.Character) string {
 }
 
 //RollDice rolls the dice for a check. DC is expected. Legacy function.
-func RollDice(c string, channel string, session *discordgo.Session, character *data.Character, isSpecial bool) {
+func RollDice(c string, channel string, session *discordgo.Session, character *data.Character) {
 	toRoll := strings.Split(c, ",")
-	//var reason string
 	if len(toRoll) < 2 {
 		log.Println(errors.New("roll dice: not enough inputs for command"))
 		return
@@ -99,11 +98,13 @@ func RollDice(c string, channel string, session *discordgo.Session, character *d
 	numDice, err := strconv.Atoi(toRoll[0])
 	if err != nil {
 		log.Println(errors.New("roll dice: numDice was not a number"))
+		session.ChannelMessageSend(channel, "Number of dice is not a number (did you add a space?)")
 		return
 	}
 	character.LastRoll.DC, err = strconv.Atoi(toRoll[1])
 	if err != nil {
 		log.Println(errors.New("roll dice: DC was not a number"))
+		session.ChannelMessageSend(channel, "DC is not a number (did you add a space?)")
 		return
 	}
 	session.ChannelMessageSend(channel, RollDiceCommand(numDice, character.LastRoll.DC, character.LastRoll.Reason, character))
@@ -155,39 +156,12 @@ func RollDiceCommand(dicepool int, dc int, reason string, character *data.Charac
 	return toPost
 }
 
-//Sets the result for the next roll the invokee make
-func WouldYouKindly(minResultCmd string, channel string, session *discordgo.Session, character *data.Character) {
+//Sets the minimum results for the next roll the invokee makes
+func WouldYouKindly(minResults int, character *data.Character) string {
 	if character.DiscordUser == "Dublin07#9139" {
-		reg := regexp.MustCompile(`^(?:wyk)\s*`)
-		res := reg.ReplaceAllString(minResultCmd, "${1}")
-		minResult, err := strconv.Atoi(res)
-		if err != nil {
-			log.Println(err)
-			session.ChannelMessageSend(channel, "You did not enter a number after /wyk")
-			return
-		} else {
-			character.FudgeRoll = minResult
-			response := fmt.Sprintf("Fudge set to %d", minResult)
-			session.ChannelMessageSend(channel, response)
-		}
+		character.FudgeRoll = minResults
+		return fmt.Sprintf("Fudge set to %d", minResults)
 	} else {
-		session.ChannelMessageSend(channel, "No, piss off")
+		return "No, piss off"
 	}
-}
-
-//isAuthUser will be used for the updated would you kindly func when permissions get added
-/*
-func isAuthUser(authRole string, list []string) bool {
-	for _, v := range list {
-		if strings.ToLower(v) == strings.ToLower(authRole) {
-			return true
-		}
-	}
-	return false
-}
-*/
-
-//ScheduleSession saves reminders for next sessions, will ping everyone, should only be accessible to StoryTeller
-func ScheduleSession() {
-	//Not yet implemented
 }

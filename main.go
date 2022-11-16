@@ -8,8 +8,6 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
-	"regexp"
-	"strings"
 	"syscall"
 	"time"
 	"unicode/utf8"
@@ -41,7 +39,7 @@ func init() {
 }
 
 var (
-
+	adminMemeberPermissions int64 = discordgo.PermissionAdministrator
 	// Characters keeps track of players
 	Characters map[string]*data.Character
 	//Client is the cpnnection to the database
@@ -56,15 +54,23 @@ var (
 			Name:        "reroll",
 			Description: "Re-rolls lowest 3 dice that are lower than the DC by using willpower.",
 		},
-		/* To be implemetned when permissions are added to discordgo
 		{
-			Name:        "wyk",
-			Description: "Sets the minimum number of success you will get on your next roll",
+			Name:                     "wyk",
+			Description:              "Sets the minimum number of success you will get on your next roll",
+			DefaultMemberPermissions: &adminMemeberPermissions,
+			Options: []*discordgo.ApplicationCommandOption{
+
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "minResults",
+					Description: "Minimum number of results wanted",
+					Required:    true,
+				},
+			},
 		},
-		*/
 		{
 			Name:        "saveall",
-			Description: "Saves all users to database",
+			Description: "Saves all users to database, debug tool do not use unless Peter told you too",
 		},
 		{
 			Name:        "roll",
@@ -109,16 +115,34 @@ var (
 				},
 			})
 		},
-		/* To be implemented when permissions are added in discordgo
+		// To be implemented when permissions are added in discordgo
 		"wyk": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			//perms were copied from discord go example
+			/*
+				perms, err := s.ApplicationCommandPermissions(s.State.User.ID, i.GuildID, i.ApplicationCommandData().ID)
+
+				var restError *discordgo.RESTError
+				if errors.As(err, &restError) && restError.Message != nil && restError.Message.Code == discordgo.ErrCodeUnknownApplicationCommandPermissions {
+					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+						Type: discordgo.InteractionResponseChannelMessageWithSource,
+						Data: &discordgo.InteractionResponseData{
+							Content: ":x: No permission overwrites",
+						},
+					})
+					return
+				} else if err != nil {
+					log.Panic(err)
+				}
+			*/
+			var minResults = int(i.ApplicationCommandData().Options[0].IntValue())
+
 			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: actions.WouldYouKindly(),
+					Content: actions.WouldYouKindly(minResults, Characters[i.Member.User.ID]),
 				},
 			})
 		},
-		*/
 		"saveall": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			for key := range Characters {
 				err := actions.SaveCharacter(*Characters[key], Client)
@@ -134,7 +158,18 @@ var (
 			})
 		},
 		"roll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-
+			//Create user if they do not exist in database
+			if Characters[i.Member.User.ID] == nil {
+				Characters[i.Member.User.ID] = new(data.Character)
+				Characters[i.Member.User.ID].User = i.Member.User.ID
+				Characters[i.Member.User.ID].Name = i.Member.Nick
+				Characters[i.Member.User.ID].DiscordUser = i.Member.User.String()
+				Characters[i.Member.User.ID].LastRoll = *new(data.RollHistory)
+				err := actions.SaveCharacter(*Characters[i.Member.User.ID], Client)
+				if err != nil {
+					log.Println(err)
+				}
+			}
 			var dicepool = int(i.ApplicationCommandData().Options[0].IntValue())
 			var dc = int(i.ApplicationCommandData().Options[1].IntValue())
 			var msg string
@@ -166,12 +201,12 @@ func init() {
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
-	Characters = make(map[string]*data.Character)
 }
 
 func init() {
 	//opens connection the the database to load in relevant data, also closes it when program finishes running
 	var err error
+	Characters = make(map[string]*data.Character)
 	Client, err = actions.ConnectDB()
 	if err != nil {
 		log.Fatalln(err)
@@ -192,8 +227,8 @@ func main() {
 	}
 	log.Println("Connection to Discord opened")
 
-	//can add more handlers based on the discord api, the function passed must always accept a Session and a discord event
-	discord.AddHandler(messageCreate)
+	//Deprecated, discord is gonna ban bots that use this feature
+	//discord.AddHandler(messageCreate)
 
 	fmt.Println("Bot is now running. Press CRTL-C or send SIGINT or SIGTERM to exit")
 
@@ -232,14 +267,12 @@ func main() {
 
 }
 
+/*
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	var cmdGiven string
 	//bot should never read it's own output
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-	if m.Author.Bot {
+	if m.Author.ID == s.State.User.ID || m.Author.Bot {
 		return
 	}
 	//if there is no character it makes one or loads one in if it can
@@ -263,10 +296,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	IsCommand, err := regexp.MatchString("[/!].*", m.Content)
 	if err != nil {
 		log.Printf("%s; offending Command %s\n", err, m.Content)
+		return
 	} else {
 		cmdGiven = trimPrefix(m.Content)
 	}
 	if IsCommand {
+
 		//The Regex checks if you are rolling dice, I'm not using \s becuase it was giving me an error saying it's not a vaild escape sequence
 		matched, err := regexp.MatchString("^[0-9]+,[0-9]+,?[a-zA-z\r\n\t\f\v]*", cmdGiven)
 		if err != nil {
@@ -276,8 +311,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		//checks what the other commands are, this should probably be made into a router
 		// m refferences the message
 		if matched {
-			//true means it makes all 10's rolled count as 2 succeses.
-			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID], true)
+			go actions.RollDice(cmdGiven, m.ChannelID, s, Characters[m.Author.ID])
 			return
 		}
 
@@ -295,10 +329,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				log.Println(err)
 			}
 		}
-		//TODO show and set commands for showing and setting data
 	}
 
 }
+*/
 
 //trims the prefix
 func trimPrefix(s string) string {

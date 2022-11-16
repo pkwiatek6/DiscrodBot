@@ -64,7 +64,10 @@ func LoadAllCharacters(client *mongo.Client) (map[string]*data.Character, error)
 	if err != nil {
 		return nil, err
 	}
-	cursor.All(context.TODO(), &results)
+	err = cursor.All(context.TODO(), &results)
+	if err != nil {
+		return nil, err
+	}
 	for _, character := range results {
 		toReturn[character.User] = &character
 	}
