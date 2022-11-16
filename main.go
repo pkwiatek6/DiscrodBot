@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -11,7 +10,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"unicode/utf8"
 
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -56,9 +54,9 @@ var (
 			Description: "Re-rolls lowest 3 dice that are lower than the DC by using willpower.",
 		},
 		{
-			Name:                     "wyk",
-			Description:              "Sets the minimum number of success you will get on your next roll",
-			DefaultMemberPermissions: &adminMemeberPermissions,
+			Name:        "wyk",
+			Description: "Sets the minimum number of success you will get on your next roll",
+			//DefaultMemberPermissions: &adminMemeberPermissions,
 			Options: []*discordgo.ApplicationCommandOption{
 
 				{
@@ -118,23 +116,7 @@ var (
 		},
 		// To be implemented when permissions are added in discordgo
 		"wyk": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			//perms were copied from discord go example
-
-			_, err := s.ApplicationCommandPermissions(s.State.User.ID, i.GuildID, i.ApplicationCommandData().ID)
-
-			var restError *discordgo.RESTError
-			if errors.As(err, &restError) && restError.Message != nil && restError.Message.Code == discordgo.ErrCodeUnknownApplicationCommandPermissions {
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Content: ":x: No permission overwrites",
-					},
-				})
-				return
-			} else if err != nil {
-				log.Panic(err)
-			}
-
+			log.Fatal("wyk Call")
 			var minResults = int(i.ApplicationCommandData().Options[0].IntValue())
 			message := actions.WouldYouKindly(minResults, Characters[i.Member.User.ID])
 			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -160,6 +142,7 @@ var (
 		},
 		"roll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			//Create user if they do not exist in database
+			log.Fatal("Roll Call")
 			if Characters[i.Member.User.ID] == nil {
 				Characters[i.Member.User.ID] = new(data.Character)
 				Characters[i.Member.User.ID].User = i.Member.User.ID
@@ -333,10 +316,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 }
-*/
+
 
 //trims the prefix
 func trimPrefix(s string) string {
 	_, i := utf8.DecodeRuneInString(s)
 	return s[i:]
 }
+*/
