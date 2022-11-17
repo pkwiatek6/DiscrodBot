@@ -5,7 +5,9 @@ After downloading the files run `go build` to create the executable
 
 To run the bot use `./DiscrodBot -t BOT_TOKEN`
 
-! or / can be used for legacy commands
+You also need a running instance of mongoDB on the same server with a Database named Characters and a collection named Sheets
+
+~~! or / can be used for legacy commands~~
 
 ## Commands
 /roll - prompts user for the following - [dice pool] [dc] [action]{optional}
