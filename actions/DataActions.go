@@ -27,7 +27,7 @@ func SaveCharacter(character data.Character, client *mongo.Client) error {
 	updateResult, err1 := collection.UpdateOne(context.TODO(), filter, update)
 	if err1 != nil {
 		return err1
-		//checks if there was a document that was updated and if so finsih saving
+		//checks if there was a document that was updated and if so finish saving
 	} else if updateResult.MatchedCount == 0 {
 		log.Println("Failed to find matching document, making a new one")
 	} else if updateResult.MatchedCount == 1 {
@@ -69,9 +69,7 @@ func LoadAllCharacters(client *mongo.Client) (map[string]*data.Character, error)
 		return nil, err
 	}
 	for key, character := range results {
-		//issue is character location pointer is being reused evertime it's being loaded
-		// thts why the user id work but everything else is copied
-		//this might work
+		//if you use a pointer to character it will change since it points to one spot in memory
 		toReturn[character.User] = &results[key]
 	}
 	return toReturn, nil
