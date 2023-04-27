@@ -1,3 +1,4 @@
 /start.bat
 *.exe
 /start.ps1
+*.code-workspace
