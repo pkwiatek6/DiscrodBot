@@ -17,7 +17,7 @@ const (
 	Collection = "Sheets"
 )
 
-//SaveCharacter saves player data to a noSQL db
+// SaveCharacter saves player data to a noSQL db
 func SaveCharacter(character data.Character, client *mongo.Client) error {
 	collection := client.Database(Database).Collection(Collection)
 	//will get readded when I figure out why discordgo isn't giving be user discriminator
@@ -43,7 +43,7 @@ func SaveCharacter(character data.Character, client *mongo.Client) error {
 	return nil
 }
 
-//LoadCharacter loads a given character by name, I'm probably also gonna require it to look up User ID
+// LoadCharacter loads a given character by name, I'm probably also gonna require it to look up User ID
 func LoadCharacter(name string, user string, client *mongo.Client) (*data.Character, error) {
 	filter := bson.M{"name": name, "user": user}
 	collection := client.Database(Database).Collection(Collection)
@@ -56,7 +56,7 @@ func LoadCharacter(name string, user string, client *mongo.Client) (*data.Charac
 	return &character, nil
 }
 
-//LoadAllCharacters loads all the characters into memory
+// LoadAllCharacters loads all the characters into memory
 func LoadAllCharacters(client *mongo.Client) (map[string]*data.Character, error) {
 	var results []data.Character
 	var toReturn = make(map[string]*data.Character)
@@ -75,7 +75,7 @@ func LoadAllCharacters(client *mongo.Client) (map[string]*data.Character, error)
 	return toReturn, nil
 }
 
-//SaveAllCharacters saves all the characters to the DB
+// SaveAllCharacters saves all the characters to the DB
 func SaveAllCharacters(Characters map[string]*data.Character, client *mongo.Client) error {
 	var err error
 	for _, character := range Characters {
@@ -87,10 +87,10 @@ func SaveAllCharacters(Characters map[string]*data.Character, client *mongo.Clie
 	return nil
 }
 
-//ConnectDB makes a client that can be called again and again to reference the database, call this first to create a Client
+// ConnectDB makes a client that can be called again and again to reference the database, call this first to create a Client
 func ConnectDB() (*mongo.Client, error) {
 	// Set client options
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	clientOptions := options.Client().ApplyURI("mongodb://host.docker.internal:27017")
 
 	// Connect to MongoDB
 	client, err := mongo.Connect(context.TODO(), clientOptions)
