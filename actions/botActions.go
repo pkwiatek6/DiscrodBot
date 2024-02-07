@@ -16,15 +16,15 @@ import (
 
 // RollD10 rolls a single d10 and returns the outcome
 func RollD10() int {
-	return rand.Intn(11) + 1
+	return rand.Intn(10) + 1
 }
 
 // Rolls fudge dice go from min to ten
 func RollDF(minFudge int) int {
 	if minFudge <= 10 && minFudge > 0 {
-		return rand.Intn(11-minFudge) + minFudge
+		return rand.Intn(10-minFudge) + minFudge
 	} else {
-		return rand.Intn(11-9) + 9
+		return rand.Intn(10-9) + 9
 	}
 }
 
@@ -117,15 +117,16 @@ func RollDiceCommand(dicepool int, dc int, reason string, character *data.Charac
 	//makes an integer array the size of the number of dice rolled and populates it
 	character.LastRoll.Rolls = make([]int, numDice)
 	if character.FudgeRoll > 0 && character.FudgeRoll <= dicepool {
+		log.Println("Fudging the roll")
 		for i := 0; i < character.FudgeRoll; i++ {
 			character.LastRoll.Rolls[i] = RollDF(dc)
 		}
 		for i := character.FudgeRoll; i < numDice; i++ {
 			character.LastRoll.Rolls[i] = RollD10()
 		}
-
+		log.Printf("Fudged roll to: [%v]", character.LastRoll.Rolls)
 		shuffle(character.LastRoll.Rolls)
-
+		log.Println("Clearing fudge")
 		character.FudgeRoll = 0
 	} else {
 		for i := 0; i < numDice; i++ {
