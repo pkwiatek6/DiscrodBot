@@ -5,11 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -203,9 +201,11 @@ func init() {
 	})
 }
 
+/* According to the docs this is no longer neccessary
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
+*/
 
 func init() {
 	var err error
