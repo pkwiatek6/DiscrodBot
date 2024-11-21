@@ -128,13 +128,11 @@ var (
 			})
 		},
 		"saveall": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			for key := range Characters {
-				err := actions.SaveCharacter(*Characters[key], Client)
-				if err != nil {
-					log.Println(err)
-				}
-			}
 			var err error
+			err = actions.SaveAllCharacters(Characters, Client)
+			if err != nil {
+				log.Println(err)
+			}
 			Characters, err = actions.LoadAllCharacters(Client)
 			if err != nil {
 				log.Fatalf("Error loading all characters. ERROR:[%s]\n", err)
