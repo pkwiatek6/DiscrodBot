@@ -18,5 +18,7 @@ FROM alpine:latest
 
 WORKDIR /
 
+# Copy the binary from the build stage
 COPY --from=build /Discrodbot /Discrodbot
+# Set the entrypoint
 CMD [ "/Discrodbot" ]
