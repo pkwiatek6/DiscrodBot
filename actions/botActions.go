@@ -21,11 +21,10 @@ func RollD10() int {
 
 // Rolls fudge dice go from min to ten
 func RollDF(minFudge int) int {
-	if minFudge <= 10 && minFudge > 0 {
-		return rand.Intn(10-minFudge) + minFudge
-	} else {
-		return rand.Intn(10-9) + 9
+	if minFudge >= 1 && minFudge <= 10 {
+		return rand.Intn(11-minFudge) + minFudge
 	}
+	return 10
 }
 
 // FlipCoin flips a coin and returns outcome
@@ -40,12 +39,21 @@ func FlipCoin(nick string) string {
 // CountSuc counts the number of successes contained in diceReults
 func CountSuc(diceResults []int, DC int) int {
 	var successes = 0
-	for i := 0; i < len(diceResults); i++ {
-		if diceResults[i] == 10 {
-			successes += 2
-		} else if diceResults[i] >= DC {
-			successes++
-		} else if diceResults[i] == 1 && diceResults[i] < DC {
+	for _, roll := range diceResults {
+		if roll == 10 {
+			//DC 10s only give a success if you you roll a ten but, not 2 successes
+			if DC < 10 {
+				successes += 2
+			} else {
+				successes += 1
+			}
+			continue // Skip further checks for this roll
+		}
+
+		if roll >= DC {
+			successes += 1
+		}
+		if roll == 1 {
 			successes--
 		}
 	}
@@ -114,13 +122,19 @@ func RollDice(c string, channel string, session *discordgo.Session, character *d
 func RollDiceCommand(dicepool int, dc int, reason string, character *data.Character) string {
 	numDice := dicepool
 	character.LastRoll.DC = dc
-	//makes an integer array the size of the number of dice rolled and populates it
 	character.LastRoll.Rolls = make([]int, numDice)
-	if character.FudgeRoll > 0 && character.FudgeRoll <= dicepool {
+
+	if character.FudgeRoll > 0 {
+		if character.FudgeRoll > numDice {
+			character.FudgeRoll = numDice //Can't fudge more than you have dice
+		}
+
 		log.Println("Fudging the roll")
+		// Fudges the first N rolls
 		for i := 0; i < character.FudgeRoll; i++ {
 			character.LastRoll.Rolls[i] = RollDF(dc)
 		}
+		// Roll the remaining dice normally
 		for i := character.FudgeRoll; i < numDice; i++ {
 			character.LastRoll.Rolls[i] = RollD10()
 		}
@@ -149,6 +163,7 @@ func RollDiceCommand(dicepool int, dc int, reason string, character *data.Charac
 			toPost = fmt.Sprintf("```%s got a Botch%s\nRolled %v```", character.Name, character.LastRoll.Reason, character.LastRoll.Rolls)
 		}
 	} else {
+		character.LastRoll.Reason = ""
 		if successes >= 1 {
 			toPost = fmt.Sprintf("```%s got %d Successes\nRolled %v```", character.Name, successes, character.LastRoll.Rolls)
 		} else if successes == 0 {
@@ -163,7 +178,7 @@ func RollDiceCommand(dicepool int, dc int, reason string, character *data.Charac
 // Sets the minimum results for the next roll the invokee makes
 func WouldYouKindly(minResults int, character *data.Character) string {
 	character.FudgeRoll = minResults
-	return fmt.Sprintf("Fudge set to %d", minResults)
+	return fmt.Sprintf("Fudge set to minimum %d successes", minResults)
 }
 
 // go passes slices by reference so it should shuffle in place

@@ -131,10 +131,14 @@ var (
 				})
 			}
 		},
-		// To be implemented when permissions are added in discordgo
 		"wyk": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			var minResults = int(i.ApplicationCommandData().Options[0].IntValue())
 			message := actions.WouldYouKindly(minResults, Characters[i.Member.User.ID])
+			err := actions.SaveCharacter(*Characters[i.Member.User.ID], Client)
+			if err != nil {
+				log.Println(err)
+				message = "Sorry Sir, there seems to have been an issue setting that"
+			}
 			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
@@ -167,7 +171,6 @@ var (
 				Characters[i.Member.User.ID].DiscordUser = i.Member.User.String()
 				Characters[i.Member.User.ID].LastRoll = *new(data.RollHistory)
 				actions.SaveCharacter(*Characters[i.Member.User.ID], Client)
-
 			} else {
 				Characters[i.Member.User.ID].Name = i.Member.Nick
 			}
