@@ -144,7 +144,7 @@ var (
 		},
 		"saveall": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			var err error
-			err = actions.SaveAllCharacters(Characters, Client)
+			err = actions.SaveAllCharacters(Characters, Client, s, *GuildID)
 			if err != nil {
 				log.Println(err)
 			}
@@ -243,7 +243,7 @@ func main() {
 		<-sc
 		//closes conentions upon reciviing an interupt
 		log.Println("\r- Interrupt recived, Closing Bot")
-		err = actions.SaveAllCharacters(Characters, Client)
+		err = actions.SaveAllCharacters(Characters, Client, discord, *GuildID)
 		if err != nil {
 			log.Println("Could not save characters: ", err)
 		}
