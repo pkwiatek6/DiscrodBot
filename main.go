@@ -194,7 +194,7 @@ func init() {
 	log.Println("Connection to Database established")
 	Characters, err = actions.LoadAllCharacters(Client)
 	if err != nil {
-		log.Fatalln("Error loading all characters")
+		log.Fatalln("Error loading all characters", err)
 	}
 	log.Println("All Characters loaded")
 
