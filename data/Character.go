@@ -25,6 +25,13 @@ type Character struct {
 }
 
 type attributes struct {
+	Physical map[string]uint8 `bson:"physical" json:"physical"`
+	Social   map[string]uint8 `bson:"social" json:"social"`
+	Mental   map[string]uint8 `bson:"mental" json:"mental"`
+}
+
+/*
+type attributes struct {
 	//physical attributes
 	Stength   uint8 `bson:"stength" json:"stength"`
 	Dexterity uint8 `bson:"dexterity" json:"dexterity"`
@@ -38,6 +45,7 @@ type attributes struct {
 	Intelligence uint8 `bson:"intelligence" json:"intelligence"`
 	Wits         uint8 `bson:"wits" json:"wits"`
 }
+*/
 
 type abilities struct {
 	Talents   map[string]uint8 `bson:"talents" json:"talents"`
