@@ -134,10 +134,15 @@ var (
 					log.Println(err)
 				}
 			}
+			var err error
+			Characters, err = actions.LoadAllCharacters(Client)
+			if err != nil {
+				log.Fatalf("Error loading all characters. ERROR:[%s]\n", err)
+			}
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: "All data saved :)",
+					Content: "All data saved & reloaded",
 				},
 			})
 		},
