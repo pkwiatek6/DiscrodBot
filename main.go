@@ -109,12 +109,27 @@ var (
 			})
 		},
 		"reroll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: actions.RerollDice(Characters[i.Member.User.ID]),
-				},
-			})
+			if Characters[i.Member.User.ID] == nil {
+				Characters[i.Member.User.ID] = new(data.Character)
+				Characters[i.Member.User.ID].User = i.Member.User.ID
+				Characters[i.Member.User.ID].Name = i.Member.Nick
+				Characters[i.Member.User.ID].DiscordUser = i.Member.User.String()
+				Characters[i.Member.User.ID].LastRoll = *new(data.RollHistory)
+				actions.SaveCharacter(*Characters[i.Member.User.ID], Client)
+				discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "You have to roll to be able to reroll",
+					},
+				})
+			} else {
+				discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: actions.RerollDice(Characters[i.Member.User.ID]),
+					},
+				})
+			}
 		},
 		// To be implemented when permissions are added in discordgo
 		"wyk": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -153,6 +168,8 @@ var (
 				Characters[i.Member.User.ID].LastRoll = *new(data.RollHistory)
 				actions.SaveCharacter(*Characters[i.Member.User.ID], Client)
 
+			} else {
+				Characters[i.Member.User.ID].Name = i.Member.Nick
 			}
 			var dicepool = int(i.ApplicationCommandData().Options[0].IntValue())
 			var dc = int(i.ApplicationCommandData().Options[1].IntValue())

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/pkwiatek6/DiscrodBot/data"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -24,9 +25,9 @@ func SaveCharacter(character data.Character, client *mongo.Client) error {
 	//filter := bson.D{{Key: "name", Value: character.Name}}
 	filter := bson.M{"name": character.Name, "user": character.User}
 	update := bson.M{"$set": character}
-	updateResult, err1 := collection.UpdateOne(context.TODO(), filter, update)
-	if err1 != nil {
-		return err1
+	updateResult, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
 		//checks if there was a document that was updated and if so finish saving
 	} else if updateResult.MatchedCount == 0 {
 		log.Println("Failed to find matching document, making a new one")
@@ -35,9 +36,9 @@ func SaveCharacter(character data.Character, client *mongo.Client) error {
 		return nil
 	}
 	//Creates a new document if there wasn't one already
-	insertResult, err2 := collection.InsertOne(context.TODO(), character)
-	if err2 != nil {
-		return err2
+	insertResult, err := collection.InsertOne(context.TODO(), character)
+	if err != nil {
+		return err
 	}
 	log.Println("Inserted post with ID:", insertResult.InsertedID)
 	return nil
@@ -76,9 +77,15 @@ func LoadAllCharacters(client *mongo.Client) (map[string]*data.Character, error)
 }
 
 // SaveAllCharacters saves all the characters to the DB
-func SaveAllCharacters(Characters map[string]*data.Character, client *mongo.Client) error {
-	var err error
+func SaveAllCharacters(Characters map[string]*data.Character, client *mongo.Client, discord *discordgo.Session, guildID string) error {
 	for _, character := range Characters {
+		//Before saving the character get the current nick name so the bot correctly adress users
+		member, err := discord.GuildMember(guildID, character.User)
+		if err != nil {
+			log.Printf("Failed to retrieve member data for user %s: %v\n", character.User, err)
+			return err
+		}
+		character.Name = member.Nick
 		err = SaveCharacter(*character, client)
 		if err != nil {
 			return err
