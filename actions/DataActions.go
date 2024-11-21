@@ -88,9 +88,9 @@ func SaveAllCharacters(Characters map[string]*data.Character, client *mongo.Clie
 }
 
 // ConnectDB makes a client that can be called again and again to reference the database, call this first to create a Client
-func ConnectDB() (*mongo.Client, error) {
+func ConnectDB(URI string) (*mongo.Client, error) {
 	// Set client options
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	clientOptions := options.Client().ApplyURI(URI)
 
 	// Connect to MongoDB
 	client, err := mongo.Connect(context.TODO(), clientOptions)

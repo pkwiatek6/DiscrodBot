@@ -16,5 +16,8 @@ FROM alpine:latest
 
 WORKDIR /
 
+# Optional: Add netcat to help wait for MongoDB in your app logic
+RUN apk add --no-cache netcat-openbsd
+
 COPY --from=build /Discrodbot /Discrodbot
 CMD [ "/Discrodbot" ]

@@ -24,6 +24,7 @@ var (
 	Token          = flag.String("t", "", "Bot acess token")
 	GuildID        = flag.String("GID", "", "Test Guild ID. IF not passed - bot registers commands globally")
 	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
+	MongoDB_URI    = flag.String("URI", "", "URI of the MongoDB instance")
 )
 
 func init() { flag.Parse() }
@@ -54,8 +55,9 @@ var (
 			Description: "Re-rolls lowest 3 dice that are lower than the DC by using willpower.",
 		},
 		{
-			Name:                     "wyk",
-			Description:              "Sets the minimum number of success you will get on your next roll",
+			Name:        "wyk",
+			Description: "Sets the minimum number of success you will get on your next roll",
+			//Admin can mannaully set the permssions to be a role or user
 			DefaultMemberPermissions: &adminMemeberPermissions,
 			Options: []*discordgo.ApplicationCommandOption{
 
@@ -185,7 +187,7 @@ func init() {
 func init() {
 	var err error
 	Characters = make(map[string]*data.Character)
-	Client, err = actions.ConnectDB()
+	Client, err = actions.ConnectDB(*MongoDB_URI)
 	if err != nil {
 		log.Fatalln(err)
 	}
