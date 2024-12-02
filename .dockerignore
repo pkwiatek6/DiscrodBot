@@ -1,0 +1,6 @@
+*.exe
+*.ps1
+*.bash
+Dockerfile
+.dockerignore
+.gitignore

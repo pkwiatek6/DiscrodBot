@@ -25,15 +25,24 @@ type Character struct {
 }
 
 type attributes struct {
-	//physical attributes
-	Stength   uint8 `bson:"stength" json:"stength"`
+	Physical physicalAttributes `bson:"physical" json:"physical"`
+	Social   socialAttributes   `bson:"social" json:"social"`
+	Mental   mentalAttributes   `bson:"mental" json:"mental"`
+}
+
+type physicalAttributes struct {
+	Strength  uint8 `bson:"strength" json:"strength"`
 	Dexterity uint8 `bson:"dexterity" json:"dexterity"`
 	Stamina   uint8 `bson:"stamina" json:"stamina"`
-	//social attributes
+}
+
+type socialAttributes struct {
 	Charisma     uint8 `bson:"charisma" json:"charisma"`
 	Manipulation uint8 `bson:"manipulation" json:"manipulation"`
 	Appearance   uint8 `bson:"appearance" json:"appearance"`
-	//mental atributes
+}
+
+type mentalAttributes struct {
 	Perception   uint8 `bson:"perception" json:"perception"`
 	Intelligence uint8 `bson:"intelligence" json:"intelligence"`
 	Wits         uint8 `bson:"wits" json:"wits"`

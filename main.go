@@ -5,11 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -24,6 +22,7 @@ var (
 	Token          = flag.String("t", "", "Bot acess token")
 	GuildID        = flag.String("GID", "", "Test Guild ID. IF not passed - bot registers commands globally")
 	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
+	MongoDB_URI    = flag.String("URI", "", "URI of the MongoDB instance")
 )
 
 func init() { flag.Parse() }
@@ -54,8 +53,9 @@ var (
 			Description: "Re-rolls lowest 3 dice that are lower than the DC by using willpower.",
 		},
 		{
-			Name:                     "wyk",
-			Description:              "Sets the minimum number of success you will get on your next roll",
+			Name:        "wyk",
+			Description: "Sets the minimum number of success you will get on your next roll",
+			//Admin can mannaully set the permssions to be a role or user
 			DefaultMemberPermissions: &adminMemeberPermissions,
 			Options: []*discordgo.ApplicationCommandOption{
 
@@ -107,17 +107,36 @@ var (
 			})
 		},
 		"reroll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: actions.RerollDice(Characters[i.Member.User.ID]),
-				},
-			})
+			if Characters[i.Member.User.ID] == nil {
+				Characters[i.Member.User.ID] = new(data.Character)
+				Characters[i.Member.User.ID].User = i.Member.User.ID
+				Characters[i.Member.User.ID].Name = i.Member.Nick
+				Characters[i.Member.User.ID].DiscordUser = i.Member.User.String()
+				Characters[i.Member.User.ID].LastRoll = *new(data.RollHistory)
+				actions.SaveCharacter(*Characters[i.Member.User.ID], Client)
+				discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "You have to roll to be able to reroll",
+					},
+				})
+			} else {
+				discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: actions.RerollDice(Characters[i.Member.User.ID]),
+					},
+				})
+			}
 		},
-		// To be implemented when permissions are added in discordgo
 		"wyk": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			var minResults = int(i.ApplicationCommandData().Options[0].IntValue())
 			message := actions.WouldYouKindly(minResults, Characters[i.Member.User.ID])
+			err := actions.SaveCharacter(*Characters[i.Member.User.ID], Client)
+			if err != nil {
+				log.Println(err)
+				message = "Sorry Sir, there seems to have been an issue setting that"
+			}
 			discord.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
@@ -126,16 +145,19 @@ var (
 			})
 		},
 		"saveall": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			for key := range Characters {
-				err := actions.SaveCharacter(*Characters[key], Client)
-				if err != nil {
-					log.Println(err)
-				}
+			var err error
+			err = actions.SaveAllCharacters(Characters, Client, s, *GuildID)
+			if err != nil {
+				log.Println(err)
+			}
+			Characters, err = actions.LoadAllCharacters(Client)
+			if err != nil {
+				log.Fatalf("Error loading all characters. ERROR:[%s]\n", err)
 			}
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: "All data saved :)",
+					Content: "All data saved & reloaded",
 				},
 			})
 		},
@@ -147,7 +169,8 @@ var (
 				Characters[i.Member.User.ID].DiscordUser = i.Member.User.String()
 				Characters[i.Member.User.ID].LastRoll = *new(data.RollHistory)
 				actions.SaveCharacter(*Characters[i.Member.User.ID], Client)
-
+			} else {
+				Characters[i.Member.User.ID].Name = i.Member.Nick
 			}
 			var dicepool = int(i.ApplicationCommandData().Options[0].IntValue())
 			var dc = int(i.ApplicationCommandData().Options[1].IntValue())
@@ -178,21 +201,23 @@ func init() {
 	})
 }
 
+/* According to the docs this is no longer neccessary
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
+*/
 
 func init() {
 	var err error
 	Characters = make(map[string]*data.Character)
-	Client, err = actions.ConnectDB()
+	Client, err = actions.ConnectDB(*MongoDB_URI)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Println("Connection to Database established")
 	Characters, err = actions.LoadAllCharacters(Client)
 	if err != nil {
-		log.Fatalln("Error loading all characters")
+		log.Fatalf("Error loading all characters. ERROR:[%s]\n", err)
 	}
 	log.Println("All Characters loaded")
 
@@ -221,7 +246,7 @@ func main() {
 		<-sc
 		//closes conentions upon reciviing an interupt
 		log.Println("\r- Interrupt recived, Closing Bot")
-		err = actions.SaveAllCharacters(Characters, Client)
+		err = actions.SaveAllCharacters(Characters, Client, discord, *GuildID)
 		if err != nil {
 			log.Println("Could not save characters: ", err)
 		}
